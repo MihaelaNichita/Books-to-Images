@@ -2,14 +2,77 @@ from tkinter import *
 import tkinter.messagebox as messagebox
 import nltk
 from nltk.tokenize import sent_tokenize
-
+from tkinter import font
 
 content = []
 par_no = 0
 book_opened = False
 list_buttons_pos = []; list_buttons_comb = []; list_buttons_check = []
+list_buttons_content = []
 nouns = []; verbs = []; adj = []
 all_comb = []
+under_frame_y = 360
+
+
+def itsaNoun(event):
+	caller = event.widget
+	caller.configure(bg='#fed766')
+	
+
+def itsaVerb(event):
+	caller = event.widget
+	caller.configure(bg='#fed766')
+
+def itsanAdj(event):
+	caller = event.widget
+	caller.configure(bg='#fed766')
+
+def justaWord(event):
+	caller = event.widget
+	caller.configure(bg='#999900')
+
+def on_leave(event):
+	caller = event.widget
+	caller.configure(fg='#0F1626')
+
+def on_enter(event):
+	caller = event.widget
+	caller.configure(fg='white')
+
+def insert_text(par):
+	lastx,lasty = 0,0
+	tok_text = nltk.word_tokenize(par)
+	for w in tok_text:
+		#while w in """.,'?"!:."""
+		if lastx + len(w)*10 > 850:
+			lastx,lasty = 0,lasty+30
+
+		times14 = font.Font(font='Times',size=14)
+		new_button = Button(content_frame, text = w,borderwidth=0, font=times14,fg='#0F1626')
+		
+		new_button.place(x=lastx, y=lasty, height=25)
+		list_buttons_content.append(new_button)
+		new_button.bind("<Leave>", on_leave)
+		new_button.bind("<Enter>", on_enter)
+		new_button.bind("<Button-1>", justaWord)
+
+		if w in nouns:
+			new_button.bind("<Button-1>", itsaNoun)
+			new_button.configure(bg='#FF533D')
+
+		if w in verbs:
+			new_button.bind("<Button-1>", itsaVerb)
+			new_button.configure(bg='#AB987A')
+
+		if w in adj:
+			new_button.bind("<Button-1>", itsanAdj)
+			new_button.configure(bg='#77C9D4')
+
+
+		content_frame.update_idletasks() 
+		lastx += new_button.winfo_width()
+		if w in ".:!?,":lastx += 10
+
 
 
 def open_book(event):
@@ -17,15 +80,17 @@ def open_book(event):
 	global book_opened
 	book_opened = True
 
-	text.delete(1.0, END)
-	f = open("paragraphs/breakfast-at-tiffany-paragraphs.txt",'r')
+	#text.delete(1.0, END)
+	removeButtons(list_buttons_content)
+	f = open("paragraphs/the-little-prince-paragraphs.txt",'r')
+
 	content = f.readlines()
-	text.insert(INSERT,content[0])
 	getPOS(content[0])
+	insert_text(content[par_no])
 
 
 def removeButtons(list_buttons):
-	for e in list_buttons:
+	for e in list_buttons:	
 		e.destroy()
 	list_buttons = []
 
@@ -37,15 +102,15 @@ def change_par():
 
 	global par_no, content,all_comb
 	all_comb = []
-	text.delete(1.0, END)
-	
-	text.insert(END,content[par_no])
+
 	# Remove previous buttons
-	removeButtons(list_buttons_pos)
-	removeButtons(list_buttons_comb)
+	# removeButtons(list_buttons_pos)
 	removeButtons(list_buttons_check)
+	removeButtons(list_buttons_comb)
+	removeButtons(list_buttons_content)
 
 	getPOS(content[par_no])
+	insert_text(content[par_no])
 
 
 def prev_par(event):
@@ -86,17 +151,17 @@ def getPOS(par):
 	global nouns,verbs,adj
 	# Get Nouns
 	nouns = [e[0] for e in parts_of_speech if 'NN' in e[1]]
-	createButtons(nouns,700,60,True)
+	#createButtons(nouns,700,60,True)
 	print("Nouns: ",nouns);print()
 
 	# Get Actions
 	verbs = [e[0] for e in parts_of_speech if 'VB' in e[1] or 'RB' in e[1]]
-	createButtons(verbs,800,60,True)
+	#createButtons(verbs,800,60,True)
 	print("Actions: ",verbs);print()
 
 	# Get Adjectives
 	adj = [e[0] for e in parts_of_speech if 'JJ' in e[1]]
-	createButtons(adj,900,60,True)
+	#createButtons(adj,900,60,True)
 	print("Adjectives: ",adj);print()
 
 
@@ -124,6 +189,10 @@ def getRand(n):
 
 
 def genComb(event):
+	if book_opened == False:
+		messagebox.showwarning("Warning","Please open a book first!")
+		return
+
 	global nouns,verbs,adj,all_comb,list_buttons_check
 	nn = len(nouns)
 	nv = len(verbs)
@@ -140,7 +209,7 @@ def genComb(event):
 
 	for e in range(1,n+1):
 		new_button = Button(window, text = str(e+len(all_comb)))
-		new_button.place(x=140, y=220+(e-1)*30,width = 35, height=25)
+		new_button.place(x=650, y=under_frame_y+e*30,width = 35, height=25)
 		list_buttons_check.append(new_button)
 		index = list_buttons_check.index(new_button)
 		new_button.bind("<Button-1>", check_comb(event,index))
@@ -153,7 +222,7 @@ def genComb(event):
 			
 		all_comb.append(r)
 		print("After Appending r, len = ",len(all_comb))
-		createButtons([nouns[r[0]],verbs[r[1]],adj[r[2]]],200,220+i*30,False)
+		createButtons([nouns[r[0]],verbs[r[1]],adj[r[2]]],690,under_frame_y+(i+1)*30,False)
 		
 
 def resetColors(event):
@@ -162,43 +231,59 @@ def resetColors(event):
 
 window = Tk()
 window.geometry("1100x700")
+window.configure(bg='#C5C1C0')
 
 label_paragraph = Label(window, text = "Paragraph:")
 label_paragraph.place(x = 30, y = 60, width=100, height=25)
+label_paragraph.configure(bg='#003366', fg='white')
 
 button_open_book = Button(window, text = "Open Book")
 button_open_book.place(x = 30, y = 30, width=100, height=25)
 button_open_book.bind("<Button-1>", open_book)
 
-text = Text(window,height=9, width=60)
-text.place(x = 140, y = 60)
+content_frame = Frame(window,height=300, width=900) #, fg = '#003333'
+content_frame.place(x = 140, y = 60)
 
-button_prev_par = Button(window, text = "Previous Paragraph")
+button_prev_par = Button(window, text = "Previous")
 button_prev_par.place(x = 140, y = 30, width=95, height=25)
 button_prev_par.bind("<Button-1>", prev_par)
 
-button_next_par = Button(window, text = "Next Paragraph")
+button_next_par = Button(window, text = "Next")
 button_next_par.place(x = 240, y = 30, width=95, height=25)
 button_next_par.bind("<Button-1>", next_par)
 
-label_nouns = Label(window, text = "Nouns:")
-label_nouns.place(x = 700, y = 30, width=100, height=25)
+label_nouns1 = Label(window, text = "Nouns:", bg='#FF533D')
+label_nouns1.place(x = 140, y = under_frame_y, width=95, height=25)
 
-label_actions = Label(window, text = "Actions:")
-label_actions.place(x = 800, y = 30, width=100, height=25)
+label_actions1 = Label(window, text = "Actions:",bg='#AB987A')
+label_actions1.place(x = 240, y = under_frame_y, width=95, height=25)
 
-label_adjectives = Label(window, text = "Adjectives:")
-label_adjectives.place(x = 900, y = 30, width=100, height=25)
+label_adjectives1 = Label(window, text = "Adjectives:",bg='#77C9D4')
+label_adjectives1.place(x = 340, y = under_frame_y, width=95, height=25)
+
+label_nouns2 = Label(window, text = "Nouns:", bg='#FF533D')
+label_nouns2.place(x = 690, y = under_frame_y, width=95, height=25)
+
+label_actions2 = Label(window, text = "Actions:",bg='#AB987A')
+label_actions2.place(x = 790, y = under_frame_y, width=95, height=25)
+
+label_adjectives2 = Label(window, text = "Adjectives:",bg='#77C9D4')
+label_adjectives2.place(x = 890, y = under_frame_y, width=95, height=25)
 
 button_hint=Button(window, text="Hint")
-button_hint.place(x=30, y=220, width=100, height=25)
+button_hint.place(x=545, y=under_frame_y+30, width=100, height=25)
 button_hint.bind("<Button-1>", genComb)
 
+label_check = Label(window, text='Check')
+label_check.place(x=650, y=under_frame_y,width = 35, height=25)
+label_check.configure(bg='#003366', fg='white')
+
 button_reset=Button(window, text="Reset")
-button_reset.place(x=30, y=250, width=100, height=25)
+button_reset.place(x=30, y=under_frame_y+60, width=100, height=25)
 button_reset.bind("<Button-1>", resetColors)
 
 label_chosen = Label(window, text = "Chosen:")
-label_chosen.place(x = 30, y = 520, width=100, height=25)
+label_chosen.place(x = 30, y = under_frame_y+30, width=100, height=25)
+label_chosen.configure(bg='#003366', fg='white')
 
 window.mainloop()
