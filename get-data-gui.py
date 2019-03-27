@@ -9,6 +9,7 @@ par_no = 0
 book_opened = False
 list_buttons_pos = []; list_buttons_comb = []; list_buttons_check = []
 list_buttons_content = []
+list_buttons_chosen = []
 nouns = []; verbs = []; adj = []
 all_comb = []
 under_frame_y = 360
@@ -22,6 +23,9 @@ def itsaNoun(event):
 def itsaVerb(event):
 	caller = event.widget
 	caller.configure(bg='#fed766')
+
+	new_button = Button (window,text=caller[text])
+	new_button.place(x=size(list_buttons_chosen)*30,y=size(list_buttons_chosen[0]),height=25)
 
 def itsanAdj(event):
 	caller = event.widget
@@ -57,7 +61,7 @@ def insert_text(par):
 		new_button.bind("<Button-1>", justaWord)
 
 		if w in nouns:
-			new_button.bind("<Button-1>", itsaNoun)
+			new_button.bind("<Button-1>", itsaVerb)
 			new_button.configure(bg='#FF533D')
 
 		if w in verbs:
@@ -65,7 +69,7 @@ def insert_text(par):
 			new_button.configure(bg='#AB987A')
 
 		if w in adj:
-			new_button.bind("<Button-1>", itsanAdj)
+			new_button.bind("<Button-1>", itsaVerb)
 			new_button.configure(bg='#77C9D4')
 
 
@@ -260,6 +264,9 @@ label_actions1.place(x = 240, y = under_frame_y, width=95, height=25)
 
 label_adjectives1 = Label(window, text = "Adjectives:",bg='#77C9D4')
 label_adjectives1.place(x = 340, y = under_frame_y, width=95, height=25)
+
+label_additional1 = Label(window, text="Additional:",bg='#999900')
+label_additional1.place(x = 440, y = under_frame_y, width=95, height=25)
 
 label_nouns2 = Label(window, text = "Nouns:", bg='#FF533D')
 label_nouns2.place(x = 690, y = under_frame_y, width=95, height=25)
