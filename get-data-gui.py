@@ -224,8 +224,15 @@ def createButtons(list,xi,yi,col):
 		i=i+1
 
 
-def check_comb(event,index):
+def check_comb(event):
+	caller = event.widget
+	index = caller['text']
 	print("index = ", index)
+	index = (int(index)-1)*3
+	for i in [index-3,index-2,index-1]:
+		createChosenList(list_buttons_comb[i])
+
+
 
 
 def getRand(n):
@@ -243,7 +250,7 @@ def genComb(event):
 	nv = len(verbs)
 	na = len(adj)
 
-	print(f"Limit = {nn*nv*na}. When hitting Hint Button, len = ",len(all_comb))
+	#print(f"Limit = {nn*nv*na}. When hitting Hint Button, len = ",len(all_comb))
 
 	n = 5 ##### 10
 	left = nn*nv*na-len(all_comb)
@@ -255,9 +262,9 @@ def genComb(event):
 	for e in range(1,n+1):
 		new_button = Button(window, text = str(e+len(all_comb)))
 		new_button.place(x=140, y=under_frame_y+e*30,width = 35, height=25)
+		new_button.bind("<Button-1>", check_comb)
 		list_buttons_check.append(new_button)
-		index = list_buttons_check.index(new_button)
-		new_button.bind("<Button-1>", check_comb(event,index))
+
 
 	for i in range(n):
 		r = [ getRand(nn),getRand(nv),getRand(na)]
@@ -266,7 +273,7 @@ def genComb(event):
 			r = [ getRand(nn),getRand(nv),getRand(na)]
 			
 		all_comb.append(r)
-		print("After Appending r, len = ",len(all_comb))
+		#print("After Appending r, len = ",len(all_comb))
 		createButtons([nouns[r[0]],verbs[r[1]],adj[r[2]]],185,under_frame_y+(i+1)*30,False)
 		
 
