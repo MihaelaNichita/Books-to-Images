@@ -21,10 +21,49 @@ nouns = []; verbs = []; adj = []
 all_comb = []
 under_frame_y = 400
 
+books = [('the-little-prince','The Little Prince','Antoine de Saint Exupery'),
+    ('to-kill-a-mocking-bird','To Kill a Mocking Bird','Harper Lee'),
+    ('breakfast-at-tiffany',"Breakfast at Tiffany's",'Truman Capote')]
+
+
+def shiftLeftButtons(list_buttons,index):
+    if index is len(list_buttons)-1:
+        return
+
+    n = len(list_buttons_chosen)
+    print('n=',n)
+    for b in list_buttons_chosen[index+1:n]:
+        i = list_buttons_chosen.index(b)
+        newX = list_buttons_chosen[i-1].winfo_x()
+        newY = list_buttons_chosen[i-1].winfo_y()
+        b.place(x=newX,y=newY)
+        print('b = ',b['text'])
+
+
+
+def deleteButton(event):
+    answer = messagebox.askyesno("Question","Are you sure you want to delete the word from the list?")
+    print(answer)
+    if answer is False:
+        return
+    caller = event.widget
+    index = list_buttons_chosen.index(caller)
+
+    # First shift to the left all the buttons starting the one at index+1
+    shiftLeftButtons(list_buttons_chosen,index)
+
+    # Then remove the button from the list
+    list_buttons_chosen.remove(caller)
+    caller.destroy()
+    
+
+    print('list_buttons_chosen = ', list_buttons_chosen)
+
 
 def createChosenList(caller):
     global list_buttons_chosen
-    new_button = Button (window,text=caller['text'])
+    new_button = Button (window,text=caller['text'],borderwidth=1,relief='solid')
+    new_button.bind("<Button-3>",deleteButton)
     print(len(list_buttons_chosen))
     if len(list_buttons_chosen)==0:
         new_button.place(x=610,y=under_frame_y,height=25,width=95)
@@ -33,49 +72,34 @@ def createChosenList(caller):
     list_buttons_chosen.append(new_button)
 
 
-def itsaNoun(event):
+def itsaKeyWord(event):
     caller = event.widget
-    caller.configure(bg='#A9A9A9',fg='black')
-    caller.configure(borderwidth=2)
-    createChosenList(caller)
-    
-
-def itsaVerb(event):
-    caller = event.widget
-    caller.configure(bg='#A9A9A9',fg='black')
-    caller.configure(borderwidth=2)
+    caller.configure(bg='#A9A9A9',borderwidth=2)
     createChosenList(caller)
 
-
-def itsanAdj(event):
-    caller = event.widget
-    caller.configure(bg='#A9A9A9',fg='black')
-    caller.configure(borderwidth=2)
-    createChosenList(caller)
 
 def justaWord(event):
     global list_in_words
     caller = event.widget
-    caller.configure(bg='#A9A9A9',fg='black')
-    caller.configure(borderwidth=2)
+    caller.configure(bg='#A9A9A9',borderwidth=2)
     createChosenList(caller)
     list_in_words.append(caller['text'])
     print(list_in_words)
-
+'''
 def on_leave(event):
     caller = event.widget
-    caller.configure(borderwidth=0)
+    #caller.configure(borderwidth=0)
 
 def on_enter(event):
     caller = event.widget
-    caller.configure(borderwidth=2)
-
+    #caller.configure(borderwidth=2)
+'''
 
 def translate(event):
     caller = event.widget
     toTrans = caller['text']
     r = translator.translate(toTrans,dest='ro')
-    translate_frame = Text(window,height=10, width=30, borderwidth=1)
+    translate_frame = Text(window,height=10, width=30, borderwidth=2,relief='groove')
     translate_frame.place(x = 760, y = 60)
     translate_frame.configure(bg="#f1f1f1")
     translate_frame.insert(END,' '+toTrans+' = ')
@@ -96,23 +120,15 @@ def insert_text(par):
         
         new_button.place(x=lastx, y=lasty, height=25)
         list_buttons_content.append(new_button)
-        new_button.bind("<Leave>", on_leave)
-        new_button.bind("<Enter>", on_enter)
+        #new_button.bind("<Leave>", on_leave)
+        #new_button.bind("<Enter>", on_enter)
         new_button.bind("<Button-1>", justaWord)
         new_button.bind("<Button-3>", translate)
 
-        if w in nouns:
-            new_button.bind("<Button-1>", itsaVerb)
-            new_button.configure(bg='#2F4F4F',fg='white')
-
-        if w in verbs:
-            new_button.bind("<Button-1>", itsaVerb)
-            new_button.configure(bg='#2F4F4F',fg='white')
-
-        if w in adj:
-            new_button.bind("<Button-1>", itsaVerb)
-            new_button.configure(bg='#2F4F4F',fg='white')
-
+        if w in nouns+verbs+adj:
+            new_button.bind("<Button-1>", itsaKeyWord)
+            new_button.configure(bg='#bdbdbd')
+            #new_button.configure(borderwidth=1,relief='solid')
 
         content_frame.update_idletasks() 
         lastx += new_button.winfo_width()
@@ -225,7 +241,7 @@ def createButtons(list,xi,yi,col):
     global list_buttons_pos, list_buttons_comb
     i=0
     for item in list:
-        new_button = Button(window, text = item)
+        new_button = Button(window, text = item,borderwidth=1,relief='groove')
         if col:
             new_button.place(x=xi, y=yi+i*30,width = 95, height=25)
             list_buttons_pos.append(new_button)
@@ -271,7 +287,7 @@ def genComb(event):
         messagebox.showwarning("Warning","These are the last combinations left!")
 
     for e in range(1,n+1):
-        new_button = Button(window, text = str(e+len(all_comb)))
+        new_button = Button(window, text = str(e+len(all_comb)),borderwidth=1,relief='groove')
         new_button.place(x=140, y=under_frame_y+e*30,width = 35, height=25)
         new_button.bind("<Button-1>", check_comb)
         list_buttons_check.append(new_button)
@@ -289,12 +305,15 @@ def genComb(event):
 
 
 def resetColors():
+    next_par('<Button-1>')
+    prev_par('<Button-1>')
+    """
     for b in list_buttons_content:
         if b['text'] in list_in_words:
             b.configure(bg='#2F4F4F',fg='white')
         if b['text'] not in nouns+verbs+adj:
             b.configure(bg='#f1f1f1',fg='black')
-
+    """
 
 def reset(event):
     global list_buttons_chosen
@@ -322,12 +341,11 @@ def sendComb(event):
     
 
 
-def getInfo(event):
-    pass
+def getInfo():
+    how_to = Toplevel(window)
+    how_to.title('How to...')
+    how_to.geometry("400x600")
 
-books = [('the-little-prince','The Little Prince','Antoine de Saint Exupery'),
-    ('to-kill-a-mocking-bird','To Kill a Mocking Bird','Harper Lee'),
-    ('breakfast-at-tiffany',"Breakfast at Tiffany's",'Truman Capote')]
 
 def openBooksList():
     global books_list
@@ -363,10 +381,8 @@ filemenu1.add_command(label="Article", command=openArticlesList)
 filemenu1.add_separator()
 filemenu1.add_command(label="Exit", command=window.quit)
 
-filemenu2 = Menu(menubar, tearoff=0)
-
 menubar.add_cascade(label="Open", menu=filemenu1)
-menubar.add_cascade(label="Info", menu=filemenu2) # call getInfo
+menubar.add_cascade(label="How to", command=getInfo) # call getInfo
 
 window.config(menu=menubar)
 
@@ -389,24 +405,27 @@ button_next_par.place(x = 170, y = 30, width=30, height=25)
 button_next_par.bind("<Button-1>", next_par)
 button_next_par.configure(bg='black',fg='white')
 
-label_nouns2 = Label(window, text = "Nouns:", borderwidth=2, relief="groove")
+label_nouns2 = Label(window, text = "Nouns:")
 label_nouns2.place(x = 185, y = under_frame_y, width=95, height=25)
+label_nouns2.configure(bg='black',fg='white')
 
-label_actions2 = Label(window, text = "Actions:",borderwidth=2, relief="groove")
+label_actions2 = Label(window, text = "Actions:")
 label_actions2.place(x = 285, y = under_frame_y, width=95, height=25)
+label_actions2.configure(bg='black',fg='white')
 
-label_adjectives2 = Label(window, text = "Adjectives:",borderwidth=2, relief="groove")
+label_adjectives2 = Label(window, text = "Adjectives:")
 label_adjectives2.place(x = 385, y = under_frame_y, width=95, height=25)
+label_adjectives2.configure(bg='black',fg='white')
 
-button_hint=Button(window, text="Hint")
+button_hint=Button(window, text="Hint",borderwidth=2,relief='groove')
 button_hint.place(x=90, y=under_frame_y, width=40, height=25)
 button_hint.bind("<Button-1>", genComb)
 
-label_check = Label(window, text='Check')
+label_check = Label(window, text='No:')
 label_check.place(x=140, y=under_frame_y,width = 40, height=25)
 label_check.configure(bg='black', fg='white')
 
-button_reset=Button(window, text="Reset")
+button_reset=Button(window, text="Reset",borderwidth=2,relief='groove')
 button_reset.place(x=505, y=under_frame_y+30, width=100, height=25)
 button_reset.bind("<Button-1>", reset)
 
@@ -414,9 +433,9 @@ label_chosen = Label(window, text = "Chosen:")
 label_chosen.place(x = 505, y = under_frame_y, width=100, height=25)
 label_chosen.configure(bg='black', fg='white')
 
-button_send = Button(window, text="Send")
+button_send = Button(window, text="Send",borderwidth=2,relief='groove')
 button_send.place(x=505, y=under_frame_y+60, width=100, height=25)
 button_send.bind("<Button-1>", sendComb)
-button_send.configure(bg='black', fg='white')
+
 
 window.mainloop()
