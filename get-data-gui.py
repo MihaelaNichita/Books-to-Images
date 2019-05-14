@@ -52,10 +52,13 @@ def itsanAdj(event):
 	createChosenList(caller)
 
 def justaWord(event):
+	global list_in_words
 	caller = event.widget
 	caller.configure(bg='#A9A9A9',fg='black')
 	caller.configure(borderwidth=2)
 	createChosenList(caller)
+	list_in_words.append(caller['text'])
+	print(list_in_words)
 
 def on_leave(event):
 	caller = event.widget
@@ -70,7 +73,7 @@ def translate(event):
 	caller = event.widget
 	toTrans = caller['text']
 	r = translator.translate(toTrans,dest='ro')
-	translate_frame = Text(window,height=10, width=20, borderwidth=1)
+	translate_frame = Text(window,height=10, width=30, borderwidth=1)
 	translate_frame.place(x = 760, y = 60)
 	translate_frame.configure(bg="#f1f1f1")
 	translate_frame.insert(END,' '+toTrans+' = ')
@@ -116,8 +119,7 @@ def insert_text(par):
 
 
 def open_book(event):
-	global content
-	global book_opened
+	global content, book_opened, list_in_words
 	book_opened = True
 
 	#text.delete(1.0, END)
@@ -127,6 +129,8 @@ def open_book(event):
 	content = f.readlines()
 	getPOS(content[0])
 	insert_text(content[par_no])
+	list_in_words = nouns + verbs + adj
+	print(f"list_in_words = {list_in_words}")
 
 
 def removeButtons(list_buttons):
@@ -141,7 +145,7 @@ def change_par():
 		messagebox.showwarning("Warning","Please open a book first!")
 		return
 
-	global par_no, content,all_comb
+	global par_no, content,all_comb, list_in_words
 	all_comb = []
 
 	# Remove previous buttons
@@ -153,6 +157,7 @@ def change_par():
 
 	getPOS(content[par_no])
 	insert_text(content[par_no])
+	list_in_words = nouns + verbs + adj
 
 
 def prev_par(event):
@@ -276,11 +281,30 @@ def genComb(event):
 		#print("After Appending r, len = ",len(all_comb))
 		createButtons([nouns[r[0]],verbs[r[1]],adj[r[2]]],185,under_frame_y+(i+1)*30,False)
 		
+def resetColors():
+	for b in list_buttons_content:
+		if b['text'] in list_in_words:
+			b.configure(bg='#2F4F4F',fg='white')
+		if b['text'] not in nouns+verbs+adj:
+			b.configure(bg='#f1f1f1',fg='black')
 
-def resetColors(event):
+
+
+def reset(event):
 	global list_buttons_chosen
 	list_buttons_chosen=removeButtons(list_buttons_chosen)
+	list_in_words = nouns + verbs + adj
+	print(list_in_words)
+
+	resetColors()
 	
+
+def sendComb(event):
+
+	pass
+
+def getInfo(event):
+	pass
 
 
 window = Tk()
@@ -290,6 +314,10 @@ window.configure(bg='#C5C1C0')
 label_paragraph = Label(window, text = "Paragraph:")
 label_paragraph.place(x = 30, y = 60, width=100, height=25)
 label_paragraph.configure(bg='black', fg='white')
+
+button_info = Button(window, text = "Info")
+button_info.place(x = 30, y = 60, width=100, height=25)
+button_info.bind("<Button-1>", getInfo)
 
 button_open_book = Button(window, text = "Open Book")
 button_open_book.place(x = 30, y = 30, width=100, height=25)
@@ -307,20 +335,6 @@ button_next_par = Button(window, text = ">>")
 button_next_par.place(x = 170, y = 30, width=30, height=25)
 button_next_par.bind("<Button-1>", next_par)
 button_next_par.configure(bg='black',fg='white')
-
-'''
-label_nouns1 = Label(window, text = "Nouns:", bg='#FF533D')
-label_nouns1.place(x = 140, y = under_frame_y, width=95, height=25)
-
-label_actions1 = Label(window, text = "Actions:",bg='#AB987A')
-label_actions1.place(x = 240, y = under_frame_y, width=95, height=25)
-
-label_adjectives1 = Label(window, text = "Adjectives:",bg='#77C9D4')
-label_adjectives1.place(x = 340, y = under_frame_y, width=95, height=25)
-
-label_additional1 = Label(window, text="Additional:",bg='#999900')
-label_additional1.place(x = 440, y = under_frame_y, width=95, height=25)
-'''
 
 label_nouns2 = Label(window, text = "Nouns:", bg='#2F4F4F',fg='white')
 label_nouns2.place(x = 185, y = under_frame_y, width=95, height=25)
@@ -341,10 +355,15 @@ label_check.configure(bg='black', fg='white')
 
 button_reset=Button(window, text="Reset")
 button_reset.place(x=505, y=under_frame_y+30, width=100, height=25)
-button_reset.bind("<Button-1>", resetColors)
+button_reset.bind("<Button-1>", reset)
 
 label_chosen = Label(window, text = "Chosen:")
 label_chosen.place(x = 505, y = under_frame_y, width=100, height=25)
 label_chosen.configure(bg='black', fg='white')
+
+button_send = Button(window, text="Send")
+button_send.place(x=505, y=under_frame_y+60, width=100, height=25)
+button_send.bind("<Button-1>", sendComb)
+button_send.configure(bg='black', fg='white')
 
 window.mainloop()
