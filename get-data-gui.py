@@ -3,6 +3,9 @@ import tkinter.messagebox as messagebox
 import nltk
 from nltk.tokenize import sent_tokenize
 from tkinter import font
+from PyDictionary import PyDictionary
+
+dictionary=PyDictionary()
 
 content = []
 par_no = 0
@@ -12,36 +15,51 @@ list_buttons_content = []
 list_buttons_chosen = []
 nouns = []; verbs = []; adj = []
 all_comb = []
-under_frame_y = 360
+under_frame_y = 400
+
+
+def createChosenList(caller):
+	new_button = Button (window,text=caller['text'])
+	if len(list_buttons_chosen)==0:
+		new_button.place(x=610,y=under_frame_y,height=25,width=95)
+	else:
+		new_button.place(x=610+(len(list_buttons_chosen)%4)*100,y=under_frame_y+int(len(list_buttons_chosen)/4)*30,height=25,width=95)
+	list_buttons_chosen.append(new_button)
 
 
 def itsaNoun(event):
 	caller = event.widget
-	caller.configure(bg='#fed766')
+	caller.configure(bg='#A9A9A9',fg='black')
+	caller.configure(borderwidth=2)
+	createChosenList(caller)
 	
 
 def itsaVerb(event):
 	caller = event.widget
-	caller.configure(bg='#fed766')
+	caller.configure(bg='#A9A9A9',fg='black')
+	caller.configure(borderwidth=2)
+	createChosenList(caller)
 
-	new_button = Button (window,text=caller[text])
-	new_button.place(x=size(list_buttons_chosen)*30,y=size(list_buttons_chosen[0]),height=25)
 
 def itsanAdj(event):
 	caller = event.widget
-	caller.configure(bg='#fed766')
+	caller.configure(bg='#A9A9A9',fg='black')
+	caller.configure(borderwidth=2)
+	createChosenList(caller)
 
 def justaWord(event):
 	caller = event.widget
-	caller.configure(bg='#999900')
+	caller.configure(bg='#A9A9A9',fg='black')
+	caller.configure(borderwidth=2)
+	createChosenList(caller)
 
 def on_leave(event):
 	caller = event.widget
-	caller.configure(fg='#0F1626')
+	caller.configure(borderwidth=0)
 
 def on_enter(event):
 	caller = event.widget
-	caller.configure(fg='white')
+	caller.configure(borderwidth=2)
 
 def insert_text(par):
 	lastx,lasty = 0,0
@@ -51,7 +69,8 @@ def insert_text(par):
 		if lastx + len(w)*10 > 850:
 			lastx,lasty = 0,lasty+30
 
-		times14 = font.Font(font='Times',size=14)
+		times14 = font.Font(font='Times',size=13)
+		ss = font.Font(font='Sans-Serif', size=3)
 		new_button = Button(content_frame, text = w,borderwidth=0, font=times14,fg='#0F1626')
 		
 		new_button.place(x=lastx, y=lasty, height=25)
@@ -62,15 +81,15 @@ def insert_text(par):
 
 		if w in nouns:
 			new_button.bind("<Button-1>", itsaVerb)
-			new_button.configure(bg='#FF533D')
+			new_button.configure(bg='#2F4F4F',fg='white')
 
 		if w in verbs:
 			new_button.bind("<Button-1>", itsaVerb)
-			new_button.configure(bg='#AB987A')
+			new_button.configure(bg='#2F4F4F',fg='white')
 
 		if w in adj:
 			new_button.bind("<Button-1>", itsaVerb)
-			new_button.configure(bg='#77C9D4')
+			new_button.configure(bg='#2F4F4F',fg='white')
 
 
 		content_frame.update_idletasks() 
@@ -112,6 +131,7 @@ def change_par():
 	removeButtons(list_buttons_check)
 	removeButtons(list_buttons_comb)
 	removeButtons(list_buttons_content)
+	removeButtons(list_buttons_chosen)
 
 	getPOS(content[par_no])
 	insert_text(content[par_no])
@@ -169,7 +189,10 @@ def getPOS(par):
 	print("Adjectives: ",adj);print()
 
 
+
+
 def createButtons(list,xi,yi,col):
+	
 	global list_buttons_pos, list_buttons_comb
 	i=0
 	for item in list:
@@ -204,16 +227,16 @@ def genComb(event):
 
 	print(f"Limit = {nn*nv*na}. When hitting Hint Button, len = ",len(all_comb))
 
-	n = 10
+	n = 5 ##### 10
 	left = nn*nv*na-len(all_comb)
 	print("left : ", left)
-	if  11 >= left:
+	if  6 >= left:
 		n = left
 		messagebox.showwarning("Warning","These are the last combinations left!")
 
 	for e in range(1,n+1):
 		new_button = Button(window, text = str(e+len(all_comb)))
-		new_button.place(x=650, y=under_frame_y+e*30,width = 35, height=25)
+		new_button.place(x=140, y=under_frame_y+e*30,width = 35, height=25)
 		list_buttons_check.append(new_button)
 		index = list_buttons_check.index(new_button)
 		new_button.bind("<Button-1>", check_comb(event,index))
@@ -226,11 +249,11 @@ def genComb(event):
 			
 		all_comb.append(r)
 		print("After Appending r, len = ",len(all_comb))
-		createButtons([nouns[r[0]],verbs[r[1]],adj[r[2]]],690,under_frame_y+(i+1)*30,False)
+		createButtons([nouns[r[0]],verbs[r[1]],adj[r[2]]],185,under_frame_y+(i+1)*30,False)
 		
 
 def resetColors(event):
-	pass
+	removeButtons(list_buttons_chosen)
 
 
 window = Tk()
@@ -239,23 +262,26 @@ window.configure(bg='#C5C1C0')
 
 label_paragraph = Label(window, text = "Paragraph:")
 label_paragraph.place(x = 30, y = 60, width=100, height=25)
-label_paragraph.configure(bg='#003366', fg='white')
+label_paragraph.configure(bg='black', fg='white')
 
 button_open_book = Button(window, text = "Open Book")
 button_open_book.place(x = 30, y = 30, width=100, height=25)
 button_open_book.bind("<Button-1>", open_book)
 
-content_frame = Frame(window,height=300, width=900) #, fg = '#003333'
+content_frame = Frame(window,height=300, width=900, borderwidth=1) #, fg = '#003333'
 content_frame.place(x = 140, y = 60)
 
-button_prev_par = Button(window, text = "Previous")
-button_prev_par.place(x = 140, y = 30, width=95, height=25)
+button_prev_par = Button(window, text = "<<")
+button_prev_par.place(x = 140, y = 30, width=30, height=25)
 button_prev_par.bind("<Button-1>", prev_par)
+button_prev_par.configure(bg='black',fg='white')
 
-button_next_par = Button(window, text = "Next")
-button_next_par.place(x = 240, y = 30, width=95, height=25)
+button_next_par = Button(window, text = ">>")
+button_next_par.place(x = 170, y = 30, width=30, height=25)
 button_next_par.bind("<Button-1>", next_par)
+button_next_par.configure(bg='black',fg='white')
 
+'''
 label_nouns1 = Label(window, text = "Nouns:", bg='#FF533D')
 label_nouns1.place(x = 140, y = under_frame_y, width=95, height=25)
 
@@ -267,30 +293,31 @@ label_adjectives1.place(x = 340, y = under_frame_y, width=95, height=25)
 
 label_additional1 = Label(window, text="Additional:",bg='#999900')
 label_additional1.place(x = 440, y = under_frame_y, width=95, height=25)
+'''
 
-label_nouns2 = Label(window, text = "Nouns:", bg='#FF533D')
-label_nouns2.place(x = 690, y = under_frame_y, width=95, height=25)
+label_nouns2 = Label(window, text = "Nouns:", bg='#2F4F4F',fg='white')
+label_nouns2.place(x = 185, y = under_frame_y, width=95, height=25)
 
-label_actions2 = Label(window, text = "Actions:",bg='#AB987A')
-label_actions2.place(x = 790, y = under_frame_y, width=95, height=25)
+label_actions2 = Label(window, text = "Actions:",bg='#2F4F4F',fg='white')
+label_actions2.place(x = 285, y = under_frame_y, width=95, height=25)
 
-label_adjectives2 = Label(window, text = "Adjectives:",bg='#77C9D4')
-label_adjectives2.place(x = 890, y = under_frame_y, width=95, height=25)
+label_adjectives2 = Label(window, text = "Adjectives:",bg='#2F4F4F',fg='white')
+label_adjectives2.place(x = 385, y = under_frame_y, width=95, height=25)
 
 button_hint=Button(window, text="Hint")
-button_hint.place(x=545, y=under_frame_y+30, width=100, height=25)
+button_hint.place(x=90, y=under_frame_y, width=40, height=25)
 button_hint.bind("<Button-1>", genComb)
 
 label_check = Label(window, text='Check')
-label_check.place(x=650, y=under_frame_y,width = 35, height=25)
-label_check.configure(bg='#003366', fg='white')
+label_check.place(x=140, y=under_frame_y,width = 40, height=25)
+label_check.configure(bg='black', fg='white')
 
 button_reset=Button(window, text="Reset")
-button_reset.place(x=30, y=under_frame_y+60, width=100, height=25)
+button_reset.place(x=505, y=under_frame_y+30, width=100, height=25)
 button_reset.bind("<Button-1>", resetColors)
 
 label_chosen = Label(window, text = "Chosen:")
-label_chosen.place(x = 30, y = under_frame_y+30, width=100, height=25)
-label_chosen.configure(bg='#003366', fg='white')
+label_chosen.place(x = 505, y = under_frame_y, width=100, height=25)
+label_chosen.configure(bg='black', fg='white')
 
 window.mainloop()
