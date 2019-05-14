@@ -3,9 +3,11 @@ import tkinter.messagebox as messagebox
 import nltk
 from nltk.tokenize import sent_tokenize
 from tkinter import font
-from PyDictionary import PyDictionary
+#from PyDictionary import PyDictionary
+from googletrans import Translator
+translator = Translator()
 
-dictionary=PyDictionary()
+#dictionary=PyDictionary()
 
 content = []
 par_no = 0
@@ -61,12 +63,24 @@ def on_enter(event):
 	caller = event.widget
 	caller.configure(borderwidth=2)
 
+
+def translate(event):
+	caller = event.widget
+	toTrans = caller['text']
+	r = translator.translate(toTrans,dest='ro')
+	translate_frame = Text(window,height=10, width=20, borderwidth=1)
+	translate_frame.place(x = 760, y = 60)
+	translate_frame.configure(bg="#f1f1f1")
+	translate_frame.insert(END,' '+toTrans+' = ')
+	translate_frame.insert(END,r.text)
+
+
 def insert_text(par):
 	lastx,lasty = 0,0
 	tok_text = nltk.word_tokenize(par)
 	for w in tok_text:
 		#while w in """.,'?"!:."""
-		if lastx + len(w)*10 > 850:
+		if lastx + len(w)*10 > 550:
 			lastx,lasty = 0,lasty+30
 
 		times14 = font.Font(font='Times',size=13)
@@ -78,6 +92,7 @@ def insert_text(par):
 		new_button.bind("<Leave>", on_leave)
 		new_button.bind("<Enter>", on_enter)
 		new_button.bind("<Button-1>", justaWord)
+		new_button.bind("<Button-3>", translate)
 
 		if w in nouns:
 			new_button.bind("<Button-1>", itsaVerb)
@@ -268,7 +283,7 @@ button_open_book = Button(window, text = "Open Book")
 button_open_book.place(x = 30, y = 30, width=100, height=25)
 button_open_book.bind("<Button-1>", open_book)
 
-content_frame = Frame(window,height=300, width=900, borderwidth=1) #, fg = '#003333'
+content_frame = Frame(window,height=300, width=600, borderwidth=1) #, fg = '#003333'
 content_frame.place(x = 140, y = 60)
 
 button_prev_par = Button(window, text = "<<")
