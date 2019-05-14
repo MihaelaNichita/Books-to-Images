@@ -98,7 +98,8 @@ def extract_paragraphs(content):
 						par = ""
 					else:
 						if (no_spaces != 0):
-							par = par + '. '
+							par = par + ' '
+							pass
 						else:
 							par = ""
 						
