@@ -6,6 +6,7 @@ from tkinter import font
 #from PyDictionary import PyDictionary
 from googletrans import Translator
 translator = Translator()
+#import getParagraphs
 
 #dictionary=PyDictionary()
 
@@ -22,6 +23,7 @@ under_frame_y = 400
 
 
 def createChosenList(caller):
+	global list_buttons_chosen
 	new_button = Button (window,text=caller['text'])
 	print(len(list_buttons_chosen))
 	if len(list_buttons_chosen)==0:
@@ -119,11 +121,11 @@ def insert_text(par):
 
 
 def open_book(event):
-	global content, book_opened, list_in_words
+	global content, book_opened, list_in_words, list_buttons_content
 	book_opened = True
 
 	#text.delete(1.0, END)
-	removeButtons(list_buttons_content)
+	list_buttons_content=removeButtons(list_buttons_content)
 	f = open("paragraphs/the-little-prince-paragraphs.txt",'r')
 
 	content = f.readlines()
@@ -145,15 +147,17 @@ def change_par():
 		messagebox.showwarning("Warning","Please open a book first!")
 		return
 
-	global par_no, content,all_comb, list_in_words
+	global par_no, content,all_comb, list_in_words, list_buttons_chosen
+	global list_buttons_check, list_buttons_comb, list_buttons_content
 	all_comb = []
 
 	# Remove previous buttons
 	# removeButtons(list_buttons_pos)
-	removeButtons(list_buttons_check)
-	removeButtons(list_buttons_comb)
-	removeButtons(list_buttons_content)
-	removeButtons(list_buttons_chosen)
+	list_buttons_check=removeButtons(list_buttons_check)
+	list_buttons_comb=removeButtons(list_buttons_comb)
+	list_buttons_content=removeButtons(list_buttons_content)
+	list_buttons_chosen=removeButtons(list_buttons_chosen)
+	print('list_buttons_chosen = ',list_buttons_chosen)
 
 	getPOS(content[par_no])
 	insert_text(content[par_no])
@@ -280,7 +284,8 @@ def genComb(event):
 		all_comb.append(r)
 		#print("After Appending r, len = ",len(all_comb))
 		createButtons([nouns[r[0]],verbs[r[1]],adj[r[2]]],185,under_frame_y+(i+1)*30,False)
-		
+
+
 def resetColors():
 	for b in list_buttons_content:
 		if b['text'] in list_in_words:
@@ -289,19 +294,31 @@ def resetColors():
 			b.configure(bg='#f1f1f1',fg='black')
 
 
-
 def reset(event):
 	global list_buttons_chosen
 	list_buttons_chosen=removeButtons(list_buttons_chosen)
 	list_in_words = nouns + verbs + adj
 	print(list_in_words)
-
 	resetColors()
 	
 
 def sendComb(event):
+	global list_in_words, list_buttons_chosen
+	list_out_words = []
 
-	pass
+	for b in list_buttons_chosen:
+		list_out_words.append(b['text'])
+
+	f = open("Data/Data.txt",'a')
+	for w in list_in_words:
+		f.write(w + " ")
+	f.write('\t')
+
+	for w in list_out_words:
+		f.write(w + " ")
+	f.write('\n')
+	
+
 
 def getInfo(event):
 	pass
