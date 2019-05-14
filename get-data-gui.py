@@ -15,6 +15,7 @@ book_opened = False
 list_buttons_pos = []; list_buttons_comb = []; list_buttons_check = []
 list_buttons_content = []
 list_buttons_chosen = []
+list_in_words = []
 nouns = []; verbs = []; adj = []
 all_comb = []
 under_frame_y = 400
@@ -22,6 +23,7 @@ under_frame_y = 400
 
 def createChosenList(caller):
 	new_button = Button (window,text=caller['text'])
+	print(len(list_buttons_chosen))
 	if len(list_buttons_chosen)==0:
 		new_button.place(x=610,y=under_frame_y,height=25,width=95)
 	else:
@@ -131,6 +133,7 @@ def removeButtons(list_buttons):
 	for e in list_buttons:	
 		e.destroy()
 	list_buttons = []
+	return list_buttons
 
 
 def change_par():
@@ -268,7 +271,9 @@ def genComb(event):
 		
 
 def resetColors(event):
-	removeButtons(list_buttons_chosen)
+	global list_buttons_chosen
+	list_buttons_chosen=removeButtons(list_buttons_chosen)
+	
 
 
 window = Tk()
