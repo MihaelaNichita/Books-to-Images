@@ -40,7 +40,6 @@ def shiftLeftButtons(list_buttons,index):
         print('b = ',b['text'])
 
 
-
 def deleteButton(event):
     answer = messagebox.askyesno("Question","Are you sure you want to delete the word from the list?")
     print(answer)
@@ -55,9 +54,6 @@ def deleteButton(event):
     # Then remove the button from the list
     list_buttons_chosen.remove(caller)
     caller.destroy()
-    
-
-    print('list_buttons_chosen = ', list_buttons_chosen)
 
 
 def createChosenList(caller):
@@ -85,15 +81,7 @@ def justaWord(event):
     createChosenList(caller)
     list_in_words.append(caller['text'])
     print(list_in_words)
-'''
-def on_leave(event):
-    caller = event.widget
-    #caller.configure(borderwidth=0)
 
-def on_enter(event):
-    caller = event.widget
-    #caller.configure(borderwidth=2)
-'''
 
 def translate(event):
     caller = event.widget
@@ -114,9 +102,9 @@ def insert_text(par):
         if lastx + len(w)*10 > 550:
             lastx,lasty = 0,lasty+30
 
-        times14 = font.Font(font='Times',size=13)
-        ss = font.Font(font='Sans-Serif', size=3)
-        new_button = Button(content_frame, text = w,borderwidth=0, font=times14,fg='#0F1626')
+        #times11 = font.Font(font='Times',size=11)
+        #ss = font.Font(font='Sans-Serif', size=3)
+        new_button = Button(content_frame, text = w,borderwidth=0,fg='#0F1626') # '''font=times14'''
         
         new_button.place(x=lastx, y=lasty, height=25)
         list_buttons_content.append(new_button)
@@ -255,7 +243,7 @@ def check_comb(event):
     caller = event.widget
     index = caller['text']
     print("index = ", index)
-    index = (int(index)-1)*3
+    index = int(index)*3
     for i in [index-3,index-2,index-1]:
         createChosenList(list_buttons_comb[i])
 
@@ -343,8 +331,68 @@ def sendComb(event):
 
 def getInfo():
     how_to = Toplevel(window)
-    how_to.title('How to...')
-    how_to.geometry("400x600")
+    how_to.title('GUIDELINE')
+    how_to.geometry("500x600")
+
+    guideline = Frame(how_to,height=500, width=400, borderwidth=2,relief='groove',bg='lightgreen')
+    guideline.place(x=30,y=30)
+
+    m0 = 'GUIDELINE'
+    m1 = 'TARGET: Enjoy reading Books or Articles you like & help in developing a tool for you to REMEMBER everything you read easier.'
+    m2 = 'STEPS:'
+    m3 = '1. Select the BOOK or ARTICLE you want to read. Menu -> "Open"'
+    m4 = '2. Read the paragraph and left-click the words you consider RELEVANT and MEMORABLE. (3 to 10 per paragraph)'
+    m5 = 'Right-click the words in order to get its TRANSLATION to Romanian.'
+    m6 = '3. Press the "Hint" button in the bottom-left to get random combinations of words.'
+    m7 = 'If you like any of those combinations, left-click its coresponding number in order to send them to the chosen RELEVANT words.'
+    m8 = '4. Right-click a word in "Chosen" words in order to remove it from the ones that are to be sent as the BEST choice of RELEVANT combination of words'
+    m9 = '5. Press "Send" button when you feel that the list of words labeled as "Chosen" looks simply UNFORGETABLE.'
+    m10 = '6. Navigate through paragraphs using "<<" and ">>" buttons.'
+
+    msg1 = Message(how_to, text = m1, width = 380)
+    msg1.config(bg='lightgreen', font=('times', 9))
+    msg1.place(x=35,y=40)
+
+    msg2 = Message(how_to, text = m2, width = 380)
+    msg2.config(bg='lightgreen',font=('times', 9,'bold'))
+    msg2.place(x=35,y=80)
+
+    msg3 = Message(how_to, text = m3, width = 380)
+    msg3.config(bg='lightgreen',font=('times', 9))
+    msg3.place(x=40,y=100)
+
+    msg4 = Message(how_to, text = m4, width = 380)
+    msg4.config(bg='lightgreen',font=('times', 9))
+    msg4.place(x=40,y=122)
+
+
+    msg5 = Message(how_to, text = m5, width = 380)
+    msg5.config(bg='lightgreen',font=('times', 9))
+    msg5.place(x=50,y=155)
+
+
+    msg6 = Message(how_to, text = m6, width = 380)
+    msg6.config(bg='lightgreen',font=('times', 9))
+    msg6.place(x=40,y=185)
+
+
+    msg7 = Message(how_to, text = m7, width = 380)
+    msg7.config(bg='lightgreen',font=('times', 9))
+    msg7.place(x=50,y=220)
+
+
+    msg8 = Message(how_to, text = m8, width = 380)
+    msg8.config(bg='lightgreen',font=('times', 9))
+    msg8.place(x=40,y=260)
+
+
+    msg9 = Message(how_to, text = m9, width = 380)
+    msg9.config(bg='lightgreen',font=('times', 9))
+    msg9.place(x=40,y=300)
+
+    msg10 = Message(how_to, text = m10, width = 380)
+    msg10.config(bg='lightgreen',font=('times', 9))
+    msg10.place(x=40,y=340)
 
 
 def openBooksList():
@@ -353,24 +401,52 @@ def openBooksList():
     books_list.title('Books List')
     books_list.geometry("400x600")
 
+    label_books = Label(books_list, text='Books:', font = ('times',9,'bold'))
+    label_books.place(x=50,y=30)
+
+    label_authors = Label(books_list, text='Authors:', font = ('times',9,'bold'))
+    label_authors.place(x=250,y=30)
+
     for book in books:
-        b = Button(books_list,text = book[1],command=books_list.destroy)
-        b.place(x=30,y=30*books.index(book))
+        b = Button(books_list,text = book[1],command=books_list.destroy, font = ('times',9))
+        b.place(x=30,y=60+20*books.index(book))
         b.configure(borderwidth=0)
         b.bind("<Button-1>", open_book) 
- 
+
+        a = Button(books_list,text = book[2], font = ('times',9))
+        a.place(x=225,y=60+20*books.index(book))
+        a.configure(borderwidth=0)
+       
+
+def getArticle(event):
+    pass
 
 def openArticlesList():
     art_list = Toplevel(window)
     art_list.title('Articles List')
-    art_list.geometry("400x600")
+    art_list.geometry("800x100")
+
+    l = Label(art_list,text='Link:')
+    l.place(x=30,y=30)
+    l.configure(bg='black', fg='white')
+
+    v = StringVar()
+    e = Entry(art_list, textvariable=v,width=100)
+    e.place(x=120,y=30)
+
+    v.set("Enter page link of the article here...")
+    s = v.get()
+
+    b = Button(art_list,text='OK',borderwidth=2,relief=GROOVE)
+    b.place(x=730,y=30)
+    b.bind('<Button-1>',getArticle)
+
+
 
 
 window = Tk()
 window.geometry("1100x700")
 window.title('Reading Assistant')
-
-
 
 menubar = Menu(window)
 
@@ -389,21 +465,21 @@ window.config(menu=menubar)
 
 
 label_paragraph = Label(window, text = "Paragraph:")
-label_paragraph.place(x = 30, y = 60, width=100, height=25)
+label_paragraph.place(x = 140, y = 32, width=100, height=22)
 label_paragraph.configure(bg='black', fg='white')
 
 content_frame = Frame(window,height=300, width=600, borderwidth=2, relief="groove") #, fg = '#003333'
 content_frame.place(x = 140, y = 60)
 
-button_prev_par = Button(window, text = "<<")
-button_prev_par.place(x = 140, y = 30, width=30, height=25)
+button_prev_par = Button(window, text = "<<",borderwidth=2,relief='groove')
+button_prev_par.place(x = 243, y = 32, width=22, height=22)
 button_prev_par.bind("<Button-1>", prev_par)
-button_prev_par.configure(bg='black',fg='white')
+#button_prev_par.configure(bg='black',fg='white')
 
-button_next_par = Button(window, text = ">>")
-button_next_par.place(x = 170, y = 30, width=30, height=25)
+button_next_par = Button(window, text = ">>",borderwidth=2,relief='groove')
+button_next_par.place(x = 267, y = 32, width=22, height=22)
 button_next_par.bind("<Button-1>", next_par)
-button_next_par.configure(bg='black',fg='white')
+#button_next_par.configure(bg='black',fg='white')
 
 label_nouns2 = Label(window, text = "Nouns:")
 label_nouns2.place(x = 185, y = under_frame_y, width=95, height=25)
