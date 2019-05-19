@@ -3,12 +3,11 @@ import tkinter.messagebox as messagebox
 import nltk
 from nltk.tokenize import sent_tokenize
 from tkinter import font
-#from PyDictionary import PyDictionary
 from googletrans import Translator
-translator = Translator()
-#import getParagraphs
+from bs4 import BeautifulSoup
+import requests
 
-#dictionary=PyDictionary()
+translator = Translator()
 
 content = []
 par_no = 0
@@ -20,6 +19,8 @@ list_in_words = []
 nouns = []; verbs = []; adj = []
 all_comb = []
 under_frame_y = 400
+page_link = ''
+openArticle = False
 
 books = [('the-little-prince','The Little Prince','Antoine de Saint Exupery'),
     ('to-kill-a-mocking-bird','To Kill a Mocking Bird','Harper Lee'),
@@ -123,17 +124,43 @@ def insert_text(par):
         if w in ".:!?,":lastx += 10
 
 
+def getParFromWebPage():
+    global e,content
+
+    page_link = e.get()
+    print(page_link)
+
+    page_response = requests.get(page_link, timeout=5)
+    page_content = BeautifulSoup(page_response.content, "html.parser")
+    #textContent = []
+    for i in range(0, 20):
+        paragraphs = page_content.find_all("p")[i].text
+        content.append(paragraphs)
+
+    for p in content:
+        print(p,'\n')
+    print(len(content))
+
+
+# open book from .txt file
 def open_book(event):
     global content, book_opened, list_in_words, list_buttons_content
+    if book_opened is True:
+        messagebox.showwarning("Warning","Please EXIT first, then open the App again!")
+        return
     book_opened = True
     #text.delete(1.0, END)
     list_buttons_content=removeButtons(list_buttons_content)
     caller = event.widget
-    bookNames = [e[1] for e in books]
-    bookName = books[bookNames.index(caller['text'])][0]
-    f = open("paragraphs/" + bookName + "-paragraphs.txt",'r')
 
-    content = f.readlines()
+    if openArticle is False:
+        bookNames = [e[1] for e in books]
+        bookName = books[bookNames.index(caller['text'])][0]
+        f = open("paragraphs/" + bookName + "-paragraphs.txt",'r')
+        content = f.readlines()
+    else:
+        getParFromWebPage()
+
     getPOS(content[0])
     insert_text(content[par_no])
     list_in_words = nouns + verbs + adj
@@ -179,6 +206,8 @@ def prev_par(event):
 def next_par(event):
     global par_no
     par_no = par_no + 1
+    #if par_no>len(content)-1:
+    #    par_no=0
     change_par()
 
 
@@ -248,8 +277,6 @@ def check_comb(event):
         createChosenList(list_buttons_comb[i])
 
 
-
-
 def getRand(n):
     import random
     return random.randint(0,n-1)
@@ -259,6 +286,7 @@ def genComb(event):
     if book_opened == False:
         messagebox.showwarning("Warning","Please open a book first!")
         return
+
 
     global nouns,verbs,adj,all_comb,list_buttons_check
     nn = len(nouns)
@@ -416,12 +444,11 @@ def openBooksList():
         a = Button(books_list,text = book[2], font = ('times',9))
         a.place(x=225,y=60+20*books.index(book))
         a.configure(borderwidth=0)
-       
 
-def getArticle(event):
-    pass
-
+global e
 def openArticlesList():
+    global e,openArticle
+    openArticle = True
     art_list = Toplevel(window)
     art_list.title('Articles List')
     art_list.geometry("800x100")
@@ -430,18 +457,15 @@ def openArticlesList():
     l.place(x=30,y=30)
     l.configure(bg='black', fg='white')
 
-    v = StringVar()
-    e = Entry(art_list, textvariable=v,width=100)
+    e = Entry(art_list, text='Enter page link of the article here...',width=100)
     e.place(x=120,y=30)
 
-    v.set("Enter page link of the article here...")
-    s = v.get()
-
-    b = Button(art_list,text='OK',borderwidth=2,relief=GROOVE)
+    b = Button(art_list,text='OK',borderwidth=2,relief=GROOVE,command=art_list.destroy)
     b.place(x=730,y=30)
-    b.bind('<Button-1>',getArticle)
+    b.bind('<Button-1>',open_book)
 
 
+"""**"""
 
 
 window = Tk()
