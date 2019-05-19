@@ -161,6 +161,8 @@ def open_book(event):
     else:
         getParFromWebPage()
 
+    print('\n\nCONTENT:\n',content,'\n\n')
+
     getPOS(content[0])
     insert_text(content[par_no])
     list_in_words = nouns + verbs + adj
@@ -192,6 +194,9 @@ def change_par():
     list_buttons_chosen=removeButtons(list_buttons_chosen)
     print('list_buttons_chosen = ',list_buttons_chosen)
 
+    print('\n\npar_no = ',par_no)
+    print('content[par_no] = ',content[par_no],'\n\n')
+
     getPOS(content[par_no])
     insert_text(content[par_no])
     list_in_words = nouns + verbs + adj
@@ -206,8 +211,8 @@ def prev_par(event):
 def next_par(event):
     global par_no
     par_no = par_no + 1
-    #if par_no>len(content)-1:
-    #    par_no=0
+    if par_no>len(content)-1:
+        par_no=0
     change_par()
 
 
