@@ -104,21 +104,15 @@ def insert_text(par):
         if lastx + len(w)*10 > 550:
             lastx,lasty = 0,lasty+30
 
-        #times11 = font.Font(font='Times',size=11)
-        #ss = font.Font(font='Sans-Serif', size=3)
-        new_button = Button(content_frame, text = w,borderwidth=0,fg='#0F1626') # '''font=times14'''
-        
+        new_button = Button(content_frame, text = w,borderwidth=0,fg='#0F1626')       
         new_button.place(x=lastx, y=lasty, height=25)
         list_buttons_content.append(new_button)
-        #new_button.bind("<Leave>", on_leave)
-        #new_button.bind("<Enter>", on_enter)
         new_button.bind("<Button-1>", justaWord)
         new_button.bind("<Button-3>", translate)
 
         if w in nouns+verbs+adj:
             new_button.bind("<Button-1>", itsaKeyWord)
             new_button.configure(bg='#bdbdbd')
-            #new_button.configure(borderwidth=1,relief='solid')
 
         content_frame.update_idletasks() 
         lastx += new_button.winfo_width()
@@ -130,7 +124,6 @@ def appendParToContent(paragraphs):
     for p in paragraphs:
         print(p.text)
         if p.text is not '' and ' ' in p.text:               
-            #print('appending to content')
             content.append(p.text)  
 
 
@@ -147,7 +140,6 @@ def getParFromWebPage():
             result = requests.get(page_link, headers=headers)
             page_content = BeautifulSoup(result.content.decode(), "lxml")
             paragraphs = page_content.find_all("p")
-            # print('len(paragraphs) = ',len(paragraphs))
             appendParToContent(paragraphs)
 
             next_page_link = page_content.find('link',attrs={'rel': 'next'})
@@ -157,10 +149,7 @@ def getParFromWebPage():
             if next_page_link is None:
                 break
 
-            # print(next_page_link['href'])
             page_link = next_page_link['href']
-
-            # print('\n\n\n\nNEXT PAGE !!!!!!!!\n\n\n\n')
 
     else:
         page_response = requests.get(page_link, timeout=5)
@@ -173,8 +162,6 @@ def getParFromWebPage():
     m_title = Message(window, text = title,width = 700)
     m_title.config(font=('times', 12,'bold'))
     m_title.place(x=345,y=5)
-
-    # print(len(content))
 
 
 def open_book(event):
@@ -198,13 +185,9 @@ def open_book(event):
     else:
         getParFromWebPage()
 
-    # print('\n\nCONTENT:\n',content,'\n\n')
-
     getPOS(content[0])
     insert_text(content[par_no])
-    list_in_words = nouns + verbs + adj
-    # print(f"list_in_words = {list_in_words}")
-    
+    list_in_words = nouns + verbs + adj    
 
 
 def removeButtons(list_buttons):
@@ -220,21 +203,15 @@ def change_par():
         return
 
     global par_no, content,all_comb, list_in_words, list_buttons_chosen
-    global list_buttons_check, list_buttons_comb, list_buttons_content
+    global list_buttons_check, list_buttons_comb, list_buttons_content,b_par_no
     all_comb = []
 
     # Remove previous buttons
-    # removeButtons(list_buttons_pos)
     list_buttons_check=removeButtons(list_buttons_check)
     list_buttons_comb=removeButtons(list_buttons_comb)
     list_buttons_content=removeButtons(list_buttons_content)
     list_buttons_chosen=removeButtons(list_buttons_chosen)
-    # print('list_buttons_chosen = ',list_buttons_chosen)
 
-    print('\n\npar_no = ',par_no)
-    print('content[par_no] = ',content[par_no],'\n\n')
-
-    global b_par_no
     nr = par_no
     if nr<0:
         nr += len(content)
@@ -262,14 +239,12 @@ def next_par(event):
 
 
 def getPOS(par):    
-    ### print("Original Paragraph: ",par);print()
     # Remove Punctuation
     par = re.sub(r'[^\w\s]',' ',par)
     par = par.lower() # won't be able to identify NNPs
     
     ## Word tokenization
     tok_text = nltk.word_tokenize(par)
-    ### print("Tokenized Paragraph: ",tok_text);print()
 
     # Removing Stopwords
     from nltk.corpus import stopwords
@@ -278,29 +253,19 @@ def getPOS(par):
     for w in tok_text:
         if w not in stop_words and w not in filtered_par:
             filtered_par.append(w)
-    ###print("Filterd Paragraph:",filtered_par);print()
 
     # POS tagging
     parts_of_speech = nltk.pos_tag(filtered_par)
-    ###print(parts_of_speech);print()
 
     global nouns,verbs,adj
     # Get Nouns
     nouns = [e[0] for e in parts_of_speech if 'NN' in e[1]]
-    #createButtons(nouns,700,60,True)
-    ###print("Nouns: ",nouns);print()
 
     # Get Actions
     verbs = [e[0] for e in parts_of_speech if 'VB' in e[1] or 'RB' in e[1]]
-    #createButtons(verbs,800,60,True)
-    ###print("Actions: ",verbs);print()
 
     # Get Adjectives
     adj = [e[0] for e in parts_of_speech if 'JJ' in e[1]]
-    #createButtons(adj,900,60,True)
-    ###print("Adjectives: ",adj);print()
-
-
 
 
 def createButtons(list,xi,yi,col):
@@ -343,9 +308,7 @@ def genComb(event):
     nv = len(verbs)
     na = len(adj)
 
-    #print(f"Limit = {nn*nv*na}. When hitting Hint Button, len = ",len(all_comb))
-
-    n = 5 ##### 10
+    n = 5
     left = nn*nv*na-len(all_comb)
     print("left : ", left)
     if  6 >= left:
@@ -366,20 +329,13 @@ def genComb(event):
             r = [ getRand(nn),getRand(nv),getRand(na)]
             
         all_comb.append(r)
-        #print("After Appending r, len = ",len(all_comb))
         createButtons([nouns[r[0]],verbs[r[1]],adj[r[2]]],185,under_frame_y+(i+1)*30,False)
 
 
 def resetColors():
     next_par('<Button-1>')
     prev_par('<Button-1>')
-    """
-    for b in list_buttons_content:
-        if b['text'] in list_in_words:
-            b.configure(bg='#2F4F4F',fg='white')
-        if b['text'] not in nouns+verbs+adj:
-            b.configure(bg='#f1f1f1',fg='black')
-    """
+
 
 def reset(event):
     global list_buttons_chosen
@@ -590,7 +546,6 @@ button_prev_par.bind("<Button-1>", prev_par)
 button_next_par = Button(window, text = ">>",borderwidth=2,relief='groove')
 button_next_par.place(x = 289, y = 32, width=22, height=22)
 button_next_par.bind("<Button-1>", next_par)
-#button_next_par.configure(bg='black',fg='white')
 
 label_nouns2 = Label(window, text = "Nouns:")
 label_nouns2.place(x = 185, y = under_frame_y, width=95, height=25)
