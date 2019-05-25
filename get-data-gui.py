@@ -6,6 +6,7 @@ from tkinter import font
 from googletrans import Translator
 from bs4 import BeautifulSoup
 import requests
+from lxml import html
 
 translator = Translator()
 
@@ -71,14 +72,14 @@ def createChosenList(caller):
 
 def itsaKeyWord(event):
     caller = event.widget
-    caller.configure(bg='#A9A9A9',borderwidth=2)
+    caller.configure(bg='lightpink',borderwidth=2)
     createChosenList(caller)
 
 
 def justaWord(event):
     global list_in_words
     caller = event.widget
-    caller.configure(bg='#A9A9A9',borderwidth=2)
+    caller.configure(bg='lightpink',borderwidth=2)
     createChosenList(caller)
     list_in_words.append(caller['text'])
     print(list_in_words)
@@ -124,49 +125,85 @@ def insert_text(par):
         if w in ".:!?,":lastx += 10
 
 
+def appendParToContent(paragraphs):
+    global content
+    for p in paragraphs:
+        print(p.text)
+        if p.text is not '' and ' ' in p.text:               
+            #print('appending to content')
+            content.append(p.text)  
+
+
 def getParFromWebPage():
     global e,content
 
     page_link = e.get()
     print(page_link)
 
-    page_response = requests.get(page_link, timeout=5)
-    page_content = BeautifulSoup(page_response.content, "html.parser")
-    #textContent = []
-    for i in range(0, 20):
-        paragraphs = page_content.find_all("p")[i].text
-        content.append(paragraphs)
+    if 'wattpad' in page_link:
+        paragraphs = ''
+        while True:
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+            result = requests.get(page_link, headers=headers)
+            page_content = BeautifulSoup(result.content.decode(), "lxml")
+            paragraphs = page_content.find_all("p")
+            # print('len(paragraphs) = ',len(paragraphs))
+            appendParToContent(paragraphs)
 
-    for p in content:
-        print(p,'\n')
-    print(len(content))
+            next_page_link = page_content.find('link',attrs={'rel': 'next'})
+            if next_page_link is None:
+                next_page_link = page_content.find('a', attrs={'class': 'on-navigate next-part-link'})      
+            
+            if next_page_link is None:
+                break
+
+            # print(next_page_link['href'])
+            page_link = next_page_link['href']
+
+            # print('\n\n\n\nNEXT PAGE !!!!!!!!\n\n\n\n')
+
+    else:
+        page_response = requests.get(page_link, timeout=5)
+        page_content = BeautifulSoup(page_response.content, "html.parser")
+        paragraphs = page_content.find_all("p")
+        appendParToContent(paragraphs)
+
+    "* Add title of article *"
+    title = page_content.find("title").text
+    m_title = Message(window, text = title,width = 600)
+    m_title.config(font=('times', 12,'bold'))
+    m_title.place(x=345,y=5)
+
+    # print(len(content))
 
 
-# open book from .txt file
 def open_book(event):
     global content, book_opened, list_in_words, list_buttons_content
-    if book_opened is True:
-        messagebox.showwarning("Warning","Please EXIT first, then open the App again!")
-        return
     book_opened = True
-    #text.delete(1.0, END)
+
     list_buttons_content=removeButtons(list_buttons_content)
     caller = event.widget
+
 
     if openArticle is False:
         bookNames = [e[1] for e in books]
         bookName = books[bookNames.index(caller['text'])][0]
         f = open("paragraphs/" + bookName + "-paragraphs.txt",'r')
         content = f.readlines()
+
+        "* Add title of book *"
+        m_title = Message(window, text = caller['text'],width = 200)
+        m_title.config(font=('times', 12,'bold'))
+        m_title.place(x=345,y=5)
     else:
         getParFromWebPage()
 
-    print('\n\nCONTENT:\n',content,'\n\n')
+    # print('\n\nCONTENT:\n',content,'\n\n')
 
     getPOS(content[0])
     insert_text(content[par_no])
     list_in_words = nouns + verbs + adj
-    print(f"list_in_words = {list_in_words}")
+    # print(f"list_in_words = {list_in_words}")
     
 
 
@@ -192,7 +229,7 @@ def change_par():
     list_buttons_comb=removeButtons(list_buttons_comb)
     list_buttons_content=removeButtons(list_buttons_content)
     list_buttons_chosen=removeButtons(list_buttons_chosen)
-    print('list_buttons_chosen = ',list_buttons_chosen)
+    # print('list_buttons_chosen = ',list_buttons_chosen)
 
     print('\n\npar_no = ',par_no)
     print('content[par_no] = ',content[par_no],'\n\n')
@@ -217,14 +254,14 @@ def next_par(event):
 
 
 def getPOS(par):    
-    print("Original Paragraph: ",par);print()
+    ### print("Original Paragraph: ",par);print()
     # Remove Punctuation
     par = re.sub(r'[^\w\s]',' ',par)
     par = par.lower() # won't be able to identify NNPs
     
     ## Word tokenization
     tok_text = nltk.word_tokenize(par)
-    print("Tokenized Paragraph: ",tok_text);print()
+    ### print("Tokenized Paragraph: ",tok_text);print()
 
     # Removing Stopwords
     from nltk.corpus import stopwords
@@ -233,27 +270,27 @@ def getPOS(par):
     for w in tok_text:
         if w not in stop_words and w not in filtered_par:
             filtered_par.append(w)
-    print("Filterd Paragraph:",filtered_par);print()
+    ###print("Filterd Paragraph:",filtered_par);print()
 
     # POS tagging
     parts_of_speech = nltk.pos_tag(filtered_par)
-    print(parts_of_speech);print()
+    ###print(parts_of_speech);print()
 
     global nouns,verbs,adj
     # Get Nouns
     nouns = [e[0] for e in parts_of_speech if 'NN' in e[1]]
     #createButtons(nouns,700,60,True)
-    print("Nouns: ",nouns);print()
+    ###print("Nouns: ",nouns);print()
 
     # Get Actions
     verbs = [e[0] for e in parts_of_speech if 'VB' in e[1] or 'RB' in e[1]]
     #createButtons(verbs,800,60,True)
-    print("Actions: ",verbs);print()
+    ###print("Actions: ",verbs);print()
 
     # Get Adjectives
     adj = [e[0] for e in parts_of_speech if 'JJ' in e[1]]
     #createButtons(adj,900,60,True)
-    print("Adjectives: ",adj);print()
+    ###print("Adjectives: ",adj);print()
 
 
 
@@ -429,6 +466,10 @@ def getInfo():
 
 
 def openBooksList():
+    if book_opened is True:
+        messagebox.showwarning("Warning","Please EXIT first, then open the App again!")
+        return
+
     global books_list
     books_list = Toplevel(window)
     books_list.title('Books List')
@@ -450,17 +491,46 @@ def openBooksList():
         a.place(x=225,y=60+20*books.index(book))
         a.configure(borderwidth=0)
 
+
+def openWebSite(event):
+    caller = event.widget
+    "* TO DO: open browser and go to website*"
+
 global e
 def openArticlesList():
+    if book_opened is True:
+        messagebox.showwarning("Warning","Please EXIT first, then open the App again!")
+        return
+
     global e,openArticle
     openArticle = True
     art_list = Toplevel(window)
     art_list.title('Articles List')
-    art_list.geometry("800x100")
+    art_list.geometry("800x200")
 
     l = Label(art_list,text='Link:')
     l.place(x=30,y=30)
     l.configure(bg='black', fg='white')
+
+
+    r = Label(art_list,text='Recommendations:')
+    r.place(x=30,y=60)
+    r.configure(bg='black', fg='white')
+
+    b1 = Button(art_list,text='Lifehacker',command=art_list.destroy, font=('times',9))
+    b1.place(x=160,y=60)
+    b1.configure(borderwidth=0)
+    b1.bind("<Button-1>", openWebSite) 
+
+    b2 = Button(art_list,text='Vice',command=art_list.destroy, font=('times',9))
+    b2.place(x=160,y=80)
+    b2.configure(borderwidth=0)
+    b2.bind("<Button-1>", openWebSite) 
+
+    b3 = Button(art_list,text='Wattpad',command=art_list.destroy, font=('times',9))
+    b3.place(x=160,y=100)
+    b3.configure(borderwidth=0)
+    b3.bind("<Button-1>", openWebSite)
 
     e = Entry(art_list, text='Enter page link of the article here...',width=100)
     e.place(x=120,y=30)
@@ -496,6 +566,10 @@ window.config(menu=menubar)
 label_paragraph = Label(window, text = "Paragraph:")
 label_paragraph.place(x = 140, y = 32, width=100, height=22)
 label_paragraph.configure(bg='black', fg='white')
+
+m_info = Message(window, text = 'In order to change the book/article, go Open -> Exit. Then start the app again.', width = 90)
+m_info.config(bg='lightgreen', font=('times', 9))
+m_info.place(x=25,y=60)
 
 content_frame = Frame(window,height=300, width=600, borderwidth=2, relief="groove") #, fg = '#003333'
 content_frame.place(x = 140, y = 60)
