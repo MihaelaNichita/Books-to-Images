@@ -170,7 +170,7 @@ def getParFromWebPage():
 
     "* Add title of article *"
     title = page_content.find("title").text
-    m_title = Message(window, text = title,width = 600)
+    m_title = Message(window, text = title,width = 700)
     m_title.config(font=('times', 12,'bold'))
     m_title.place(x=345,y=5)
 
@@ -234,6 +234,12 @@ def change_par():
     print('\n\npar_no = ',par_no)
     print('content[par_no] = ',content[par_no],'\n\n')
 
+    global b_par_no
+    nr = par_no
+    if nr<0:
+        nr += len(content)
+    b_par_no['text']=str(nr+1)
+
     getPOS(content[par_no])
     insert_text(content[par_no])
     list_in_words = nouns + verbs + adj
@@ -242,6 +248,8 @@ def change_par():
 def prev_par(event):
     global par_no
     par_no = par_no - 1
+    if par_no<-len(content):
+        par_no=0
     change_par()
 
 
@@ -580,7 +588,7 @@ button_prev_par.bind("<Button-1>", prev_par)
 #button_prev_par.configure(bg='black',fg='white')
 
 button_next_par = Button(window, text = ">>",borderwidth=2,relief='groove')
-button_next_par.place(x = 267, y = 32, width=22, height=22)
+button_next_par.place(x = 289, y = 32, width=22, height=22)
 button_next_par.bind("<Button-1>", next_par)
 #button_next_par.configure(bg='black',fg='white')
 
@@ -615,6 +623,10 @@ label_chosen.configure(bg='black', fg='white')
 button_send = Button(window, text="Send",borderwidth=2,relief='groove')
 button_send.place(x=505, y=under_frame_y+60, width=100, height=25)
 button_send.bind("<Button-1>", sendComb)
+
+b_par_no = Button(window, text = '1',borderwidth=2,relief='groove')
+b_par_no.config(font=('times', 9,'italic'))
+b_par_no.place(x=267,y=32,width = 22,height=22)
 
 
 window.mainloop()
