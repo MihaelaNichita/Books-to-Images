@@ -63,12 +63,10 @@ def separatePar(par,no_spaces,min_lim,max_lim,i,filename):
 	if startIndex<len(par)-2:
 		writeParagraph(par[startIndex:],str(i),filename)
 		i=i+1
-
 	return i
 
 
 def extract_paragraphs(content):
-
 	flag = 0; max_len = 0; par = ""
 	no_spaces=0; i=1
 	max_lim = 80; min_lim = 40 # unit = spaces
@@ -109,7 +107,6 @@ def extract_paragraphs(content):
 			flag = 0
 			par = par + str(x)
 
-	# print("Number of paragraphs = i-1 = "+ str(i-1))
 
 import glob
 import os
