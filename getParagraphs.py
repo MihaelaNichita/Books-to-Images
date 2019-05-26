@@ -112,12 +112,19 @@ def extract_paragraphs(content):
 	# print("Number of paragraphs = i-1 = "+ str(i-1))
 
 import glob
+import os
 files=glob.glob("books/*.txt")
 print(files)
 for file in files:
-    f = open(file, "r",encoding='UTF-8') 
-    content = f.read()
-    filename = file[file.index('\\')+1:file.index('.')]
-    print(filename)
-    extract_paragraphs(content)
-    f.close()
+	f = open(file, "r",encoding='UTF-8') 
+	content = f.read()
+	filename = file[file.index('\\')+1:file.index('.')]
+
+	exists = os.path.isfile("paragraphs/"+ filename +"-paragraphs.txt")
+	if exists:
+		print(filename +"-paragraphs.txt already exists")
+	else:
+		print(filename)
+		extract_paragraphs(content)
+
+	f.close()
