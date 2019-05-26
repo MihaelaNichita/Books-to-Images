@@ -33,18 +33,15 @@ def shiftLeftButtons(list_buttons,index):
         return
 
     n = len(list_buttons_chosen)
-    print('n=',n)
     for b in list_buttons_chosen[index+1:n]:
         i = list_buttons_chosen.index(b)
         newX = list_buttons_chosen[i-1].winfo_x()
         newY = list_buttons_chosen[i-1].winfo_y()
         b.place(x=newX,y=newY)
-        print('b = ',b['text'])
 
 
 def deleteButton(event):
     answer = messagebox.askyesno("Question","Are you sure you want to delete the word from the list?")
-    print(answer)
     if answer is False:
         return
     caller = event.widget
@@ -62,7 +59,7 @@ def createChosenList(caller):
     global list_buttons_chosen
     new_button = Button (window,text=caller['text'],borderwidth=1,relief='solid')
     new_button.bind("<Button-3>",deleteButton)
-    print(len(list_buttons_chosen))
+
     if len(list_buttons_chosen)==0:
         new_button.place(x=610,y=under_frame_y,height=25,width=95)
     else:
@@ -82,25 +79,27 @@ def justaWord(event):
     caller.configure(bg='lightpink',borderwidth=2)
     createChosenList(caller)
     list_in_words.append(caller['text'])
-    print(list_in_words)
 
 
 def translate(event):
-    caller = event.widget
-    toTrans = caller['text']
-    r = translator.translate(toTrans,dest='ro')
-    translate_frame = Text(window,height=10, width=30, borderwidth=2,relief='groove')
-    translate_frame.place(x = 760, y = 60)
-    translate_frame.configure(bg="#f1f1f1")
-    translate_frame.insert(END,' '+toTrans+' = ')
-    translate_frame.insert(END,r.text)
+    try:
+        caller = event.widget
+        toTrans = caller['text']
+        r = translator.translate(toTrans,dest='ro')
+        translate_frame = Text(window,height=10, width=30, borderwidth=2,relief='groove')
+        translate_frame.place(x = 760, y = 60)
+        translate_frame.configure(bg="#f1f1f1")
+        translate_frame.insert(END,' '+toTrans+' = ')
+        translate_frame.insert(END,r.text)
+    except:
+        messagebox.showwarning("Warning","Something went wrong when trying to translate this word! \nCheck your connection to the internet.")
+        return
 
 
 def insert_text(par):
     lastx,lasty = 0,0
     tok_text = nltk.word_tokenize(par)
     for w in tok_text:
-        #while w in """.,'?"!:."""
         if lastx + len(w)*10 > 550:
             lastx,lasty = 0,lasty+30
 
@@ -122,46 +121,47 @@ def insert_text(par):
 def appendParToContent(paragraphs):
     global content
     for p in paragraphs:
-        print(p.text)
         if p.text is not '' and ' ' in p.text:               
             content.append(p.text)  
 
 
 def getParFromWebPage():
     global e,content
+    try:
+        page_link = e.get()
 
-    page_link = e.get()
-    print(page_link)
+        if 'wattpad' in page_link:
+            paragraphs = ''
+            while True:
+                headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+                result = requests.get(page_link, headers=headers)
+                page_content = BeautifulSoup(result.content.decode(), "lxml")
+                paragraphs = page_content.find_all("p")
+                appendParToContent(paragraphs)
 
-    if 'wattpad' in page_link:
-        paragraphs = ''
-        while True:
-            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-            result = requests.get(page_link, headers=headers)
-            page_content = BeautifulSoup(result.content.decode(), "lxml")
+                next_page_link = page_content.find('link',attrs={'rel': 'next'})
+                if next_page_link is None:
+                    next_page_link = page_content.find('a', attrs={'class': 'on-navigate next-part-link'})      
+                
+                if next_page_link is None:
+                    break
+
+                page_link = next_page_link['href']
+
+        else:
+            page_response = requests.get(page_link, timeout=5)
+            page_content = BeautifulSoup(page_response.content, "html.parser")
             paragraphs = page_content.find_all("p")
             appendParToContent(paragraphs)
 
-            next_page_link = page_content.find('link',attrs={'rel': 'next'})
-            if next_page_link is None:
-                next_page_link = page_content.find('a', attrs={'class': 'on-navigate next-part-link'})      
-            
-            if next_page_link is None:
-                break
-
-            page_link = next_page_link['href']
-
-    else:
-        page_response = requests.get(page_link, timeout=5)
-        page_content = BeautifulSoup(page_response.content, "html.parser")
-        paragraphs = page_content.find_all("p")
-        appendParToContent(paragraphs)
-
-    "* Add title of article *"
-    title = page_content.find("title").text
-    m_title = Message(window, text = title,width = 700)
-    m_title.config(font=('times', 12,'bold'))
-    m_title.place(x=345,y=5)
+        "* Add title of article *"
+        title = page_content.find("title").text
+        m_title = Message(window, text = title,width = 700)
+        m_title.config(font=('times', 12,'bold'))
+        m_title.place(x=345,y=5)
+    except:
+        messagebox.showwarning("Warning","Something went wrong when trying to access the article! \nCheck your connection to the internet.")
+        return
 
 
 def open_book(event):
@@ -286,7 +286,6 @@ def createButtons(list,xi,yi,col):
 def check_comb(event):
     caller = event.widget
     index = caller['text']
-    print("index = ", index)
     index = int(index)*3
     for i in [index-3,index-2,index-1]:
         createChosenList(list_buttons_comb[i])
@@ -310,7 +309,6 @@ def genComb(event):
 
     n = 5
     left = nn*nv*na-len(all_comb)
-    print("left : ", left)
     if  6 >= left:
         n = left
         messagebox.showwarning("Warning","These are the last combinations left!")
@@ -325,7 +323,7 @@ def genComb(event):
     for i in range(n):
         r = [ getRand(nn),getRand(nv),getRand(na)]
         while r in all_comb:
-            print("Duplicat: ",r)
+            # r is a Duplicate
             r = [ getRand(nn),getRand(nv),getRand(na)]
             
         all_comb.append(r)
@@ -341,7 +339,6 @@ def reset(event):
     global list_buttons_chosen
     list_buttons_chosen=removeButtons(list_buttons_chosen)
     list_in_words = nouns + verbs + adj
-    print(list_in_words)
     resetColors()
     
 
@@ -504,8 +501,9 @@ def openArticlesList():
     b.bind('<Button-1>',open_book)
 
 
-"""**"""
 
+
+"""   *********************   """
 
 window = Tk()
 window.geometry("1100x700")
@@ -525,8 +523,6 @@ menubar.add_cascade(label="How to", command=getInfo) # call getInfo
 
 window.config(menu=menubar)
 
-
-
 label_paragraph = Label(window, text = "Paragraph:")
 label_paragraph.place(x = 140, y = 32, width=100, height=22)
 label_paragraph.configure(bg='black', fg='white')
@@ -541,10 +537,9 @@ content_frame.place(x = 140, y = 60)
 button_prev_par = Button(window, text = "<<",borderwidth=2,relief='groove')
 button_prev_par.place(x = 243, y = 32, width=22, height=22)
 button_prev_par.bind("<Button-1>", prev_par)
-#button_prev_par.configure(bg='black',fg='white')
 
 button_next_par = Button(window, text = ">>",borderwidth=2,relief='groove')
-button_next_par.place(x = 289, y = 32, width=22, height=22)
+button_next_par.place(x = 303, y = 32, width=22, height=22)
 button_next_par.bind("<Button-1>", next_par)
 
 label_nouns2 = Label(window, text = "Nouns:")
@@ -581,7 +576,6 @@ button_send.bind("<Button-1>", sendComb)
 
 b_par_no = Button(window, text = '1',borderwidth=2,relief='groove')
 b_par_no.config(font=('times', 9,'italic'))
-b_par_no.place(x=267,y=32,width = 22,height=22)
-
+b_par_no.place(x=267,y=32,width = 35,height=22)
 
 window.mainloop()
