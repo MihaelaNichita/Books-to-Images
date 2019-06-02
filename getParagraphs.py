@@ -1,6 +1,7 @@
 
 
 def writeParagraph(par,nr,filename):
+	print("Got to writeParagraph")
 	# Write one paragraph a line (enter between paragraphs)
 	f = open("paragraphs/"+ filename +"-paragraphs.txt",'a')
 	try:
@@ -9,6 +10,7 @@ def writeParagraph(par,nr,filename):
 		pass
 
 def goodParagraph(par,no_spaces,min_lim,max_lim):
+	print("Got to goodParagraph")
 	if par=="" or no_spaces<min_lim or no_spaces>max_lim:
 		return False
 	return True
@@ -17,6 +19,7 @@ def getNoSpaces(string):
 	return len([e for e in string if e==' '])
 
 def separatePar(par,no_spaces,min_lim,max_lim,i,filename):
+	print("Got to separatePar")
 	# Separate into paragraphs than contain min 40 and max 80 spaces & no double '\n's
 
 	## Estimate no of subparagraphs & no of spaces per subparagraph
@@ -67,30 +70,42 @@ def separatePar(par,no_spaces,min_lim,max_lim,i,filename):
 
 
 def extract_paragraphs(content):
+
 	flag = 0; max_len = 0; par = ""
 	no_spaces=0; i=1
 	max_lim = 80; min_lim = 40 # unit = spaces
+
+	global filename
+	print(filename)
 	for x in content:
+
 		if x == ' ':
 			no_spaces=no_spaces+1	
 		if x == '\n':
-			if flag == 1:
+			print('ENTER found')
+			if flag != 0:
 				flag = 0
-				if no_spaces > max_len:
-					max_len = no_spaces
+			else:
+				flag=flag+1
+				print('flag = ',flag)
+
+			#if no_spaces > max_len:
+			#	max_len = no_spaces
 				
-				if '\n' in par or '\r' in par:
-					par.replace('\n',' ')
-					par.replace('\r',' ')
-				if goodParagraph(par,no_spaces,min_lim,max_lim)==True:
-					writeParagraph(par,str(i),filename)
-					i=i+1
-					no_spaces = 0
-					par = ""
-				else:
-					if no_spaces>max_lim:
-						if par[len(par)-1]!='.':
-							par = par + '.'
+			if '\n' in par or '\r' in par:
+				print("Got to deleting n & r")
+				par.replace('\n',' ')
+				par.replace('\r',' ')
+
+			if goodParagraph(par,no_spaces,min_lim,max_lim)==True:
+				writeParagraph(par,str(i),filename)
+				i=i+1
+				no_spaces = 0
+				par = ""
+			else:
+				if no_spaces>max_lim:
+					if par[len(par)-1]!='.':
+						par = par + '.'
 						i=separatePar(par,no_spaces,min_lim,max_lim,i,filename)
 						no_spaces = 0
 						par = ""
@@ -101,19 +116,23 @@ def extract_paragraphs(content):
 						else:
 							par = ""
 						
-			else:
-				flag=flag+1
+
+
 		else:
 			flag = 0
 			par = par + str(x)
+			print('flag = ',flag)
 
 
 import glob
 import os
+filename = ''
+content = ''
 files=glob.glob("books/*.txt")
 print(files)
 for file in files:
 	f = open(file, "r",encoding='UTF-8') 
+
 	content = f.read()
 	filename = file[file.index('\\')+1:file.index('.')]
 
