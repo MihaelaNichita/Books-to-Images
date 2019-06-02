@@ -24,8 +24,13 @@ page_link = ''
 
 books = [('the-little-prince','The Little Prince','Antoine de Saint Exupery'),
     ('to-kill-a-mocking-bird','To Kill a Mocking Bird','Harper Lee'),
-    ('breakfast-at-tiffany',"Breakfast at Tiffany's",'Truman Capote')]
+    ('breakfast-at-tiffany',"Breakfast at Tiffany's",'Truman Capote'),
+    ('intelligent-agents',"Intelligent Agents",'Russel & Norvig'),
+    ('solving-problems-by-searching',"Solving Problems by Searching",'Russel & Norvig')
+    ]
 
+
+"** TO DO: add mesage SENT that fades in a few seconds **"
 
 def shiftLeftButtons(list_buttons,index):
     if index is len(list_buttons)-1:
@@ -378,6 +383,8 @@ def sendComb(event):
         for w in list_out_words:
             f.write(w + " ")
         f.write('\n')
+
+        removeButtons(list_buttons_chosen)
     except:
         messagebox.showwarning("Warning","Something went wrong when trying to send words to the file! \nPlease contact Mihaela Nichita.")
         return   
