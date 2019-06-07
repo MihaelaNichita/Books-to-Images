@@ -73,7 +73,12 @@ def deleteButton(event):
 
 
 def createChosenList(caller):
-    global list_buttons_chosen
+    global list_buttons_chosen,list_in_words
+
+    if len(list_buttons_chosen) == 9:
+        messagebox.showwarning("Warning","Only 9 words allowed!")
+        return
+
     new_button = Button(window, text=caller['text'], borderwidth=1, relief='solid')
     new_button.bind("<Button-3>", deleteButton)
 
@@ -83,6 +88,7 @@ def createChosenList(caller):
         new_button.place(x=610 + (len(list_buttons_chosen) % 4) * 100,
                          y=under_frame_y + int(len(list_buttons_chosen) / 4) * 30, height=25, width=95)
     list_buttons_chosen.append(new_button)
+    list_in_words.append(caller['text'])
 
 
 def itsaKeyWord(event):
@@ -96,7 +102,6 @@ def justaWord(event):
     caller = event.widget
     caller.configure(bg='lightpink', borderwidth=2)
     createChosenList(caller)
-    list_in_words.append(caller['text'])
 
 
 def translate(event):
@@ -118,6 +123,7 @@ def insert_text(par):
     global parFont
     lastx, lasty = 0, 0
     tok_text = nltk.word_tokenize(par)
+
     for w in tok_text:
         if lastx + len(w) * 10 > 550:
             lastx, lasty = 0, lasty + 30
@@ -314,6 +320,10 @@ def createButtons(list, xi, yi, col):
 
 def check_comb(event):
     try:
+        global list_buttons_chosen
+        if len(list_buttons_chosen)>6:
+            messagebox.showwarning("Warning","Only 9 words allowed!")
+            return
         caller = event.widget
         index = caller['text']
         index = int(index) * 3
@@ -658,7 +668,7 @@ label_font.configure(bg='black', fg='white')
 
 b_font = Button(window, text='12', borderwidth=2, relief='groove')
 b_font.config(font=('times', 9, 'italic'))
-b_font.place(x=478, y=32, width=35, height=22)
+b_font.place(x=453, y=32, width=35, height=22)
 b_font.bind("<Button-1>", changeFont)
 
 
