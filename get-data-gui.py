@@ -28,13 +28,16 @@ under_frame_y = 400
 page_link = ''
 parFont = ('times', 12)
 fonts = [9,10,11,12,13,14]
+items_to_destroy = []
 
 
 books = [('the-little-prince', 'The Little Prince', 'Antoine de Saint Exupery'),
          ('to-kill-a-mocking-bird', 'To Kill a Mocking Bird', 'Harper Lee'),
          ('breakfast-at-tiffany', "Breakfast at Tiffany's", 'Truman Capote'),
          ('intelligent-agents', "Intelligent Agents", 'Russel & Norvig'),
-         ('solving-problems-by-searching', "Solving Problems by Searching", 'Russel & Norvig')
+         ('solving-problems-by-searching', "Solving Problems by Searching", 'Russel & Norvig'),
+         ('comparing-methods-for-single-paragraph-similarity-analysis','comparing-methods-for-single-paragraph-similarity-analysis','Benjamin Stone'),
+         ('sapiens','Sapiens','Yuval Noah Harari')
          ]
 
 "** TO DO: add mesage SENT that fades in a few seconds **"
@@ -58,9 +61,8 @@ def shiftLeftButtons(list_buttons, index):
 
 
 def deleteButton(event):
-    answer = messagebox.askyesno("Question", "Are you sure you want to delete the word from the list?")
-    if answer is False:
-        return
+    global items_to_destroy
+    removeButtons(items_to_destroy)
     caller = event.widget
     index = list_buttons_chosen.index(caller)
 
@@ -72,11 +74,25 @@ def deleteButton(event):
     caller.destroy()
 
 
+def showMessage(text,x,y):
+    msg = Message(window, text=text, width=200)
+    msg.config(bg='lightgreen', font=('times', 9))
+    msg.place(x=x, y=y)
+
+    items_to_destroy.append(msg)
+
 def createChosenList(caller):
     global list_buttons_chosen,list_in_words
 
     if len(list_buttons_chosen) == 9:
         messagebox.showwarning("Warning","Only 9 words allowed!")
+        return
+
+    if len(caller['text'])<3:
+        return
+
+    if caller['text'] in [b['text'] for b in list_buttons_chosen]:
+        showMessage('Word already in the list',x=500,y=32)
         return
 
     new_button = Button(window, text=caller['text'], borderwidth=1, relief='solid')
@@ -106,6 +122,8 @@ def justaWord(event):
 
 def translate(event):
     try:
+        global items_to_destroy
+        removeButtons(items_to_destroy)
         caller = event.widget
         toTrans = caller['text']
         r = translator.translate(toTrans, dest='ro')
@@ -227,7 +245,8 @@ def change_par():
         return
 
     try:
-        global par_no, content, all_comb, list_in_words, list_buttons_chosen
+
+        global par_no, content, all_comb, list_in_words, list_buttons_chosen, items_to_destroy
         global list_buttons_check, list_buttons_comb, list_buttons_content, b_par_no
         all_comb = []
 
@@ -236,6 +255,7 @@ def change_par():
         list_buttons_comb = removeButtons(list_buttons_comb)
         list_buttons_content = removeButtons(list_buttons_content)
         list_buttons_chosen = removeButtons(list_buttons_chosen)
+        removeButtons(items_to_destroy)
 
         nr = par_no
         if nr < 0:
@@ -383,6 +403,7 @@ def resetColors():
 def reset(event):
     try:
         global list_buttons_chosen
+        removeButtons(items_to_destroy)
         list_buttons_chosen = removeButtons(list_buttons_chosen)
         list_in_words = nouns + verbs + adj
         resetColors()
@@ -396,6 +417,9 @@ def sendComb(event):
     list_out_words = []
 
     try:
+        if len(list_buttons_chosen)<2:
+            messagebox.showwarning("Warning",'Minimum 2 words needed')
+            return
         for b in list_buttons_chosen:
             list_out_words.append(b['text'])
 
@@ -409,6 +433,7 @@ def sendComb(event):
         f.write('\n')
 
         removeButtons(list_buttons_chosen)
+        next_par('<Button-1>')
     except:
         catchError("Something went wrong when trying to send words to the file! \nPlease contact Mihaela Nichita.")
         return
@@ -427,7 +452,7 @@ def getInfo():
         m1 = 'TARGET: Enjoy reading Books or Articles you like & help in developing a tool for you to REMEMBER everything you read easier.'
         m2 = 'STEPS:'
         m3 = '1. Select the BOOK or ARTICLE you want to read. Menu -> "Open"'
-        m4 = '2. Read the paragraph and left-click the words you consider RELEVANT and MEMORABLE. (3 to 10 per paragraph)'
+        m4 = '2. Read the paragraph and left-click the words you consider RELEVANT and MEMORABLE. (2 to 9 per paragraph)'
         m5 = 'Right-click the words in order to get its TRANSLATION to Romanian.'
         m6 = '3. Press the "Hint" button in the bottom-left to get random combinations of words.'
         m7 = 'If you like any of those combinations, left-click its coresponding number in order to send them to the chosen RELEVANT words.'
@@ -633,6 +658,7 @@ menubar.add_cascade(label="Open", menu=filemenu1)
 menubar.add_cascade(label="How to", command=getInfo)  # call getInfo
 
 window.config(menu=menubar)
+
 
 
 
