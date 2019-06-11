@@ -20,15 +20,13 @@ list_buttons_check = []
 list_buttons_content = []
 list_buttons_chosen = []
 list_in_words = []
-nouns = []
-verbs = []
-adj = []
 all_comb = []
 under_frame_y = 400
 page_link = ''
 parFont = ('times', 12)
 fonts = [9,10,11,12,13,14]
 items_to_destroy = []
+filtered_par = []
 
 
 books = [('the-little-prince', 'The Little Prince', 'Antoine de Saint Exupery'),
@@ -36,7 +34,6 @@ books = [('the-little-prince', 'The Little Prince', 'Antoine de Saint Exupery'),
          ('breakfast-at-tiffany', "Breakfast at Tiffany's", 'Truman Capote'),
          ('intelligent-agents', "Intelligent Agents", 'Russel & Norvig'),
          ('solving-problems-by-searching', "Solving Problems by Searching", 'Russel & Norvig'),
-         ('comparing-methods-for-single-paragraph-similarity-analysis','comparing-methods-for-single-paragraph-similarity-analysis','Benjamin Stone'),
          ('sapiens','Sapiens','Yuval Noah Harari')
          ]
 
@@ -140,7 +137,8 @@ def translate(event):
 def insert_text(par):
     global parFont
     lastx, lasty = 0, 0
-    tok_text = nltk.word_tokenize(par)
+    #tok_text = nltk.word_tokenize(par)
+    tok_text = par.split(' ')
 
     for w in tok_text:
         if lastx + len(w) * 10 > 550:
@@ -152,7 +150,7 @@ def insert_text(par):
         new_button.bind("<Button-1>", justaWord)
         new_button.bind("<Button-3>", translate)
 
-        if w in nouns + verbs + adj:
+        if w in filtered_par:
             new_button.bind("<Button-1>", itsaKeyWord)
             new_button.configure(bg='#bdbdbd')
 
@@ -229,7 +227,7 @@ def open_book(event):
 
     getPOS(content[0])
     insert_text(content[par_no])
-    list_in_words = nouns + verbs + adj
+    list_in_words = filtered_par
 
 
 def removeButtons(list_buttons):
@@ -264,7 +262,7 @@ def change_par():
 
         getPOS(content[par_no])
         insert_text(content[par_no])
-        list_in_words = nouns + verbs + adj
+        list_in_words = filtered_par
     except:
         catchError("Something went wrong when trying to change the paragraph! \nPlease contact Mihaela Nichita.")
         return
@@ -285,36 +283,32 @@ def next_par(event):
         par_no = 0
     change_par()
 
-
+# Get filtered_par which won't contain stop words -> no more POS tagging
 def getPOS(par):
     try:
         # Remove Punctuation
         par = re.sub(r'[^\w\s]', ' ', par)
-        par = par.lower()  # won't be able to identify NNPs
-
+        par = re.sub(r"([.!?,:])", r" \1", par)
+        print('par =',par)
+        # par = re.sub(r" \'\w", r"\'\w", par)
+        par = par.lower() 
+        print('par =',par)
         ## Word tokenization
-        tok_text = nltk.word_tokenize(par)
+        tok_text = par.split(' ')
+        print('tok_text = ',tok_text)
+        for w in tok_text:
+            w.strip()
+        print('tok_text = ',tok_text)
 
         # Removing Stopwords
         from nltk.corpus import stopwords
         stop_words = set(stopwords.words("english"))
-        filtered_par = []
+        global filtered_par
         for w in tok_text:
             if w not in stop_words and w not in filtered_par:
                 filtered_par.append(w)
 
-        # POS tagging
-        parts_of_speech = nltk.pos_tag(filtered_par)
-
-        global nouns, verbs, adj
-        # Get Nouns
-        nouns = [e[0] for e in parts_of_speech if 'NN' in e[1]]
-
-        # Get Actions
-        verbs = [e[0] for e in parts_of_speech if 'VB' in e[1] or 'RB' in e[1]]
-
-        # Get Adjectives
-        adj = [e[0] for e in parts_of_speech if 'JJ' in e[1]]
+        print('filtered_par = ', filtered_par)
     except:
         catchError("Something went wrong when trying to identify the parts of speech! \nPlease contact Mihaela Nichita.")
         return
@@ -353,7 +347,7 @@ def check_comb(event):
         catchError("Something went wrong when trying to send the combination to the list of chosen words! \nPlease contact Mihaela Nichita.")
         return
 
-
+'''
 def getRand(n):
     import random
     return random.randint(0, n - 1)
@@ -364,8 +358,20 @@ def genComb(event):
         catchError( "Please open a book first!")
         return
 
-    try:
-        global nouns, verbs, adj, all_comb, list_buttons_check
+    #try:
+        global filtered_par, all_comb, list_buttons_check
+
+        # POS tagging
+        parts_of_speech = nltk.pos_tag(filtered_par)
+
+        # Get Nouns
+        nouns = [e[0] for e in parts_of_speech if 'NN' in e[1]]
+
+        # Get Actions
+        verbs = [e[0] for e in parts_of_speech if 'VB' in e[1] or 'RB' in e[1]]
+
+        # Get Adjectives
+        adj = [e[0] for e in parts_of_speech if 'JJ' in e[1]]
         nn = len(nouns)
         nv = len(verbs)
         na = len(adj)
@@ -390,10 +396,10 @@ def genComb(event):
 
             all_comb.append(r)
             createButtons([nouns[r[0]], verbs[r[1]], adj[r[2]]], 185, under_frame_y + (i + 1) * 30, False)
-    except:
-        catchError("Something went wrong when trying to generate combinations of words! \nPlease contact Mihaela Nichita.")
-        return
-
+    # except:
+    #     catchError("Something went wrong when trying to generate combinations of words! \nPlease contact Mihaela Nichita.")
+    #     return
+'''
 
 def resetColors():
     next_par('<Button-1>')
@@ -405,7 +411,7 @@ def reset(event):
         global list_buttons_chosen
         removeButtons(items_to_destroy)
         list_buttons_chosen = removeButtons(list_buttons_chosen)
-        list_in_words = nouns + verbs + adj
+        list_in_words = filtered_par
         resetColors()
     except:
         catchError( "Something went wrong when resetting! \nPlease contact Mihaela Nichita.")
@@ -698,25 +704,25 @@ b_font.place(x=453, y=32, width=35, height=22)
 b_font.bind("<Button-1>", changeFont)
 
 
-label_nouns2 = Label(window, text="Nouns:")
-label_nouns2.place(x=185, y=under_frame_y, width=95, height=25)
-label_nouns2.configure(bg='black', fg='white')
+# label_nouns2 = Label(window, text="Nouns:")
+# label_nouns2.place(x=185, y=under_frame_y, width=95, height=25)
+# label_nouns2.configure(bg='black', fg='white')
 
-label_actions2 = Label(window, text="Actions:")
-label_actions2.place(x=285, y=under_frame_y, width=95, height=25)
-label_actions2.configure(bg='black', fg='white')
+# label_actions2 = Label(window, text="Actions:")
+# label_actions2.place(x=285, y=under_frame_y, width=95, height=25)
+# label_actions2.configure(bg='black', fg='white')
 
-label_adjectives2 = Label(window, text="Adjectives:")
-label_adjectives2.place(x=385, y=under_frame_y, width=95, height=25)
-label_adjectives2.configure(bg='black', fg='white')
+# label_adjectives2 = Label(window, text="Adjectives:")
+# label_adjectives2.place(x=385, y=under_frame_y, width=95, height=25)
+# label_adjectives2.configure(bg='black', fg='white')
 
-button_hint = Button(window, text="Hint", borderwidth=2, relief='groove')
-button_hint.place(x=90, y=under_frame_y, width=40, height=25)
-button_hint.bind("<Button-1>", genComb)
+# button_hint = Button(window, text="Hint", borderwidth=2, relief='groove')
+# button_hint.place(x=90, y=under_frame_y, width=40, height=25)
+# button_hint.bind("<Button-1>", genComb)
 
-label_check = Label(window, text='No:')
-label_check.place(x=140, y=under_frame_y, width=40, height=25)
-label_check.configure(bg='black', fg='white')
+# label_check = Label(window, text='No:')
+# label_check.place(x=140, y=under_frame_y, width=40, height=25)
+# label_check.configure(bg='black', fg='white')
 
 button_reset = Button(window, text="Reset", borderwidth=2, relief='groove')
 button_reset.place(x=505, y=under_frame_y + 30, width=100, height=25)
