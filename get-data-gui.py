@@ -71,7 +71,20 @@ def deleteButton(event):
     caller.destroy()
 
 
+def deleteButton(caller):
+    global list_buttons_chosen
+    index = list_buttons_chosen.index(caller)
+
+    # First shift to the left all the buttons starting the one at index+1
+    shiftLeftButtons(list_buttons_chosen, index)
+
+    # Then remove the button from the list
+    list_buttons_chosen.remove(caller)
+    caller.destroy()
+
+
 def showMessage(text,x,y):
+    global window
     msg = Message(window, text=text, width=200)
     msg.config(bg='lightgreen', font=('times', 9))
     msg.place(x=x, y=y)
@@ -79,13 +92,13 @@ def showMessage(text,x,y):
     items_to_destroy.append(msg)
 
 def createChosenList(caller):
-    global list_buttons_chosen,list_in_words
+    global list_buttons_chosen,list_in_words, window
 
     if len(list_buttons_chosen) == 9:
         messagebox.showwarning("Warning","Only 9 words allowed!")
         return
 
-    if len(caller['text'])<3:
+    if len(caller['text'])<2 and caller['text'] not in range(10):
         return
 
     if caller['text'] in [b['text'] for b in list_buttons_chosen]:
@@ -94,6 +107,7 @@ def createChosenList(caller):
 
     new_button = Button(window, text=caller['text'], borderwidth=1, relief='solid')
     new_button.bind("<Button-3>", deleteButton)
+    new_button.bind("<Button-1>", linkWords)
 
     if len(list_buttons_chosen) == 0:
         new_button.place(x=610, y=under_frame_y, height=25, width=95)
@@ -119,7 +133,7 @@ def justaWord(event):
 
 def translate(event):
     try:
-        global items_to_destroy
+        global items_to_destroy, window
         removeButtons(items_to_destroy)
         caller = event.widget
         toTrans = caller['text']
@@ -135,7 +149,7 @@ def translate(event):
 
 
 def insert_text(par):
-    global parFont
+    global parFont, content_frame
     lastx, lasty = 0, 0
     #tok_text = nltk.word_tokenize(par)
     tok_text = par.split(' ')
@@ -167,7 +181,7 @@ def appendParToContent(paragraphs):
 
 
 def getParFromWebPage():
-    global e, content
+    global e, content, window
     try:
         page_link = e.get()
         if 'wattpad' in page_link:
@@ -206,7 +220,7 @@ def getParFromWebPage():
 
 
 def open_book(event):
-    global content, book_opened, list_in_words, list_buttons_content
+    global content, book_opened, list_in_words, list_buttons_content, window
     book_opened = True
 
     list_buttons_content = removeButtons(list_buttons_content)
@@ -225,7 +239,7 @@ def open_book(event):
     else:
         getParFromWebPage()
 
-    getPOS(content[0])
+    getFilteredPar(content[0])
     insert_text(content[par_no])
     list_in_words = filtered_par
 
@@ -260,7 +274,7 @@ def change_par():
             nr += len(content)
         b_par_no['text'] = str(nr + 1)
 
-        getPOS(content[par_no])
+        getFilteredPar(content[par_no])
         insert_text(content[par_no])
         list_in_words = filtered_par
     except:
@@ -284,21 +298,17 @@ def next_par(event):
     change_par()
 
 # Get filtered_par which won't contain stop words -> no more POS tagging
-def getPOS(par):
+def getFilteredPar(par):
     try:
         # Remove Punctuation
         par = re.sub(r'[^\w\s]', ' ', par)
         par = re.sub(r"([.!?,:])", r" \1", par)
-        print('par =',par)
-        # par = re.sub(r" \'\w", r"\'\w", par)
+        # par = re.sub(r" \'\w", r"\'\w", par) # for not separating "don" from "\'t"
         par = par.lower() 
-        print('par =',par)
         ## Word tokenization
         tok_text = par.split(' ')
-        print('tok_text = ',tok_text)
         for w in tok_text:
             w.strip()
-        print('tok_text = ',tok_text)
 
         # Removing Stopwords
         from nltk.corpus import stopwords
@@ -307,8 +317,6 @@ def getPOS(par):
         for w in tok_text:
             if w not in stop_words and w not in filtered_par:
                 filtered_par.append(w)
-
-        print('filtered_par = ', filtered_par)
     except:
         catchError("Something went wrong when trying to identify the parts of speech! \nPlease contact Mihaela Nichita.")
         return
@@ -316,7 +324,7 @@ def getPOS(par):
 
 def createButtons(list, xi, yi, col):
     try:
-        global list_buttons_pos, list_buttons_comb
+        global list_buttons_pos, list_buttons_comb, window
         i = 0
         for item in list:
             new_button = Button(window, text=item, borderwidth=1, relief='groove')
@@ -347,19 +355,19 @@ def check_comb(event):
         catchError("Something went wrong when trying to send the combination to the list of chosen words! \nPlease contact Mihaela Nichita.")
         return
 
-'''
+# not used
 def getRand(n):
     import random
     return random.randint(0, n - 1)
 
-
+# not used
 def genComb(event):
     if book_opened == False:
         catchError( "Please open a book first!")
         return
 
-    #try:
-        global filtered_par, all_comb, list_buttons_check
+    try:
+        global filtered_par, all_comb, list_buttons_check, window
 
         # POS tagging
         parts_of_speech = nltk.pos_tag(filtered_par)
@@ -396,10 +404,10 @@ def genComb(event):
 
             all_comb.append(r)
             createButtons([nouns[r[0]], verbs[r[1]], adj[r[2]]], 185, under_frame_y + (i + 1) * 30, False)
-    # except:
-    #     catchError("Something went wrong when trying to generate combinations of words! \nPlease contact Mihaela Nichita.")
-    #     return
-'''
+    except:
+        catchError("Something went wrong when trying to generate combinations of words! \nPlease contact Mihaela Nichita.")
+        return
+
 
 def resetColors():
     next_par('<Button-1>')
@@ -447,6 +455,7 @@ def sendComb(event):
 
 def getInfo():
     try:
+        global window
         how_to = Toplevel(window)
         how_to.title('GUIDELINE')
         how_to.geometry("500x600")
@@ -515,7 +524,7 @@ def openBooksList():
         catchError( "Please EXIT first, then open the App again!")
         return
     try:
-        global books_list
+        global books_list, window
         books_list = Toplevel(window)
         books_list.title('Books List')
         books_list.geometry("400x600")
@@ -558,7 +567,7 @@ def openArticlesList():
         catchError( "Please EXIT first, then open the App again!")
         return
 
-    global e
+    global e,window
     try:
         art_list = Toplevel(window)
         art_list.title('Articles List')
@@ -615,9 +624,9 @@ def setFont(fontWanted):
         parFont = ('times',fontWanted)
    
 
-
 def changeFontCurrentParagraph():
     resetColors()
+
 
 def changeFont(event):
     caller = event.widget
@@ -639,104 +648,112 @@ def changeFont(event):
         popup.grab_release()
 
 
+click1 = False
+toBeLinked = []
+def linkWords(event):
+    if button_link_w['bg'] != 'black':
+        return
 
+    global list_buttons_chosen,toBeLinked
+    if len(toBeLinked) == 3:
+        messagebox.showwarning("Warning",'Not allowed to link more than 3 words!')
+    
+    caller = event.widget
+    # link 2 or 3 words
+    toBeLinked.append(list_buttons_chosen.index(caller))
+    caller['bg'] = 'lightpink'
+    print('toBeLinked = ', toBeLinked)
+
+
+
+def changeColor(event):
+    global toBeLinked, list_buttons_chosen, button_link_w
+    if button_link_w['bg'] != 'black':
+        button_link_w.configure(bg='black', fg='white',text = 'OK')
+    else:
+        if len(toBeLinked)<2:
+            messagebox.showwarning("Warning",'No words to link.')
+
+        for i in toBeLinked[1:]:
+            list_buttons_chosen[toBeLinked[0]]['text'] += '_' + list_buttons_chosen[i]['text']
+            deleteButton(list_buttons_chosen[i])
+        
+        print(list_buttons_chosen)
+        toBeLinked = []
+        button_link_w.configure(bg='#D3D3D3', fg='black',text = 'Link Words')
     
 
+def populateWindow():
+    global window
+    menubar = Menu(window)
 
+    # create a pulldown menu, and add it to the menu bar
+    filemenu1 = Menu(menubar, tearoff=0)
+    filemenu1.add_command(label="Book", command=openBooksList)  # call open_book
+    filemenu1.add_command(label="Article", command=openArticlesList)
+    filemenu1.add_separator()
+    filemenu1.add_command(label="Exit", command=window.quit)
 
+    menubar.add_cascade(label="Open", menu=filemenu1)
+    menubar.add_cascade(label="How to", command=getInfo)  # call getInfo
 
-"""   *********************   """
+    window.config(menu=menubar)
+
+    m_info = Message(window, text='In order to change the book/article, go Open -> Exit. Then start the app again.',
+                     width=90)
+    m_info.config(bg='lightgreen', font=('times', 9))
+    m_info.place(x=25, y=60)
+
+    # PARAGRAPH related: #
+    label_paragraph = Label(window, text="Paragraph:")
+    label_paragraph.place(x=140, y=32, width=100, height=22)
+    label_paragraph.configure(bg='black', fg='white')
+
+    button_prev_par = Button(window, text="<<", borderwidth=2, relief='groove')
+    button_prev_par.place(x=243, y=32, width=22, height=22)
+    button_prev_par.bind("<Button-1>", prev_par)
+
+    button_next_par = Button(window, text=">>", borderwidth=2, relief='groove')
+    button_next_par.place(x=303, y=32, width=22, height=22)
+    button_next_par.bind("<Button-1>", next_par)
+
+    b_par_no = Button(window, text='1', borderwidth=2, relief='groove')
+    b_par_no.config(font=('times', 9, 'italic'))
+    b_par_no.place(x=267, y=32, width=35, height=22)
+
+    # FONT related #
+    label_font = Label(window, text="Font:")
+    label_font.place(x=370, y=32, width=80, height=22)
+    label_font.configure(bg='black', fg='white')
+
+    b_font = Button(window, text='12', borderwidth=2, relief='groove')
+    b_font.config(font=('times', 9, 'italic'))
+    b_font.place(x=453, y=32, width=35, height=22)
+    b_font.bind("<Button-1>", changeFont)
+
+    button_reset = Button(window, text="Reset", borderwidth=2, relief='groove')
+    button_reset.place(x=505, y=under_frame_y + 60, width=100, height=25)
+    button_reset.bind("<Button-1>", reset)
+
+    label_chosen = Label(window, text="Chosen:")
+    label_chosen.place(x=505, y=under_frame_y, width=100, height=25)
+    label_chosen.configure(bg='black', fg='white')
+
+    button_link_w = Button(window, text="Link Words", borderwidth=2, relief='groove')
+    button_link_w.place(x=505, y=under_frame_y + 30, width=100, height=25)
+    button_link_w.bind("<Button-1>", changeColor)
+
+    button_send = Button(window, text="Send", borderwidth=2, relief='groove')
+    button_send.place(x=505, y=under_frame_y + 90, width=100, height=25)
+    button_send.bind("<Button-1>", sendComb)
+
+   
+
 
 window = Tk()
 window.geometry("1100x700")
 window.title('Reading Assistant')
-
-menubar = Menu(window)
-
-# create a pulldown menu, and add it to the menu bar
-filemenu1 = Menu(menubar, tearoff=0)
-filemenu1.add_command(label="Book", command=openBooksList)  # call open_book
-filemenu1.add_command(label="Article", command=openArticlesList)
-filemenu1.add_separator()
-filemenu1.add_command(label="Exit", command=window.quit)
-
-menubar.add_cascade(label="Open", menu=filemenu1)
-menubar.add_cascade(label="How to", command=getInfo)  # call getInfo
-
-window.config(menu=menubar)
-
-
-
-
-m_info = Message(window, text='In order to change the book/article, go Open -> Exit. Then start the app again.',
-                 width=90)
-m_info.config(bg='lightgreen', font=('times', 9))
-m_info.place(x=25, y=60)
-
 content_frame = Frame(window, height=300, width=600, borderwidth=2, relief="groove")  # , fg = '#003333'
 content_frame.place(x=140, y=60)
-
-# PARAGRAPH realted: #
-label_paragraph = Label(window, text="Paragraph:")
-label_paragraph.place(x=140, y=32, width=100, height=22)
-label_paragraph.configure(bg='black', fg='white')
-
-button_prev_par = Button(window, text="<<", borderwidth=2, relief='groove')
-button_prev_par.place(x=243, y=32, width=22, height=22)
-button_prev_par.bind("<Button-1>", prev_par)
-
-button_next_par = Button(window, text=">>", borderwidth=2, relief='groove')
-button_next_par.place(x=303, y=32, width=22, height=22)
-button_next_par.bind("<Button-1>", next_par)
-
-b_par_no = Button(window, text='1', borderwidth=2, relief='groove')
-b_par_no.config(font=('times', 9, 'italic'))
-b_par_no.place(x=267, y=32, width=35, height=22)
-
-# FONT related #
-label_font = Label(window, text="Font:")
-label_font.place(x=370, y=32, width=80, height=22)
-label_font.configure(bg='black', fg='white')
-
-b_font = Button(window, text='12', borderwidth=2, relief='groove')
-b_font.config(font=('times', 9, 'italic'))
-b_font.place(x=453, y=32, width=35, height=22)
-b_font.bind("<Button-1>", changeFont)
-
-
-# label_nouns2 = Label(window, text="Nouns:")
-# label_nouns2.place(x=185, y=under_frame_y, width=95, height=25)
-# label_nouns2.configure(bg='black', fg='white')
-
-# label_actions2 = Label(window, text="Actions:")
-# label_actions2.place(x=285, y=under_frame_y, width=95, height=25)
-# label_actions2.configure(bg='black', fg='white')
-
-# label_adjectives2 = Label(window, text="Adjectives:")
-# label_adjectives2.place(x=385, y=under_frame_y, width=95, height=25)
-# label_adjectives2.configure(bg='black', fg='white')
-
-# button_hint = Button(window, text="Hint", borderwidth=2, relief='groove')
-# button_hint.place(x=90, y=under_frame_y, width=40, height=25)
-# button_hint.bind("<Button-1>", genComb)
-
-# label_check = Label(window, text='No:')
-# label_check.place(x=140, y=under_frame_y, width=40, height=25)
-# label_check.configure(bg='black', fg='white')
-
-button_reset = Button(window, text="Reset", borderwidth=2, relief='groove')
-button_reset.place(x=505, y=under_frame_y + 30, width=100, height=25)
-button_reset.bind("<Button-1>", reset)
-
-label_chosen = Label(window, text="Chosen:")
-label_chosen.place(x=505, y=under_frame_y, width=100, height=25)
-label_chosen.configure(bg='black', fg='white')
-
-button_send = Button(window, text="Send", borderwidth=2, relief='groove')
-button_send.place(x=505, y=under_frame_y + 60, width=100, height=25)
-button_send.bind("<Button-1>", sendComb)
-
-
-
-
+populateWindow()
 window.mainloop()
