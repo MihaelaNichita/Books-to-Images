@@ -1,7 +1,7 @@
 
 
 def writeParagraph(par,nr,filename):
-	print("Got to writeParagraph")
+	# print("Got to writeParagraph")
 	# Write one paragraph a line (enter between paragraphs)
 	f = open("paragraphs/"+ filename +"-paragraphs.txt",'a')
 	try:
@@ -10,7 +10,7 @@ def writeParagraph(par,nr,filename):
 		pass
 
 def goodParagraph(par,no_spaces,min_lim,max_lim):
-	print("Got to goodParagraph")
+	# print("Got to goodParagraph")
 	if par=="" or no_spaces<min_lim or no_spaces>max_lim:
 		return False
 	return True
@@ -19,7 +19,7 @@ def getNoSpaces(string):
 	return len([e for e in string if e==' '])
 
 def separatePar(par,no_spaces,min_lim,max_lim,i,filename):
-	print("Got to separatePar")
+	# print("Got to separatePar")
 	# Separate into paragraphs than contain min 40 and max 80 spaces & no double '\n's
 
 	## Estimate no of subparagraphs & no of spaces per subparagraph
@@ -69,31 +69,30 @@ def separatePar(par,no_spaces,min_lim,max_lim,i,filename):
 	return i
 
 
-def extract_paragraphs(content):
+def extract_paragraphs(content,filename):
 
 	flag = 0; max_len = 0; par = ""
 	no_spaces=0; i=1
 	max_lim = 80; min_lim = 40 # unit = spaces
 
-	global filename
-	print(filename)
+	# print(filename)
 	for x in content:
 
 		if x == ' ':
 			no_spaces=no_spaces+1	
 		if x == '\n':
-			print('ENTER found')
+			# print('ENTER found')
 			if flag != 0:
 				flag = 0
 			else:
 				flag=flag+1
-				print('flag = ',flag)
+				# print('flag = ',flag)
 
 			#if no_spaces > max_len:
 			#	max_len = no_spaces
 				
 			if '\n' in par or '\r' in par:
-				print("Got to deleting n & r")
+				# print("Got to deleting n & r")
 				par.replace('\n',' ')
 				par.replace('\r',' ')
 
@@ -114,33 +113,8 @@ def extract_paragraphs(content):
 							par = par + ' '
 							pass
 						else:
-							par = ""
-						
-
-
+							par = ""						
 		else:
 			flag = 0
 			par = par + str(x)
-			print('flag = ',flag)
-
-
-import glob
-import os
-filename = ''
-content = ''
-files=glob.glob("books/*.txt")
-print(files)
-for file in files:
-	f = open(file, "r",encoding='UTF-8') 
-
-	content = f.read()
-	filename = file[file.index('\\')+1:file.index('.')]
-
-	exists = os.path.isfile("paragraphs/"+ filename +"-paragraphs.txt")
-	if exists:
-		print(filename +"-paragraphs.txt already exists")
-	else:
-		print(filename)
-		extract_paragraphs(content)
-
-	f.close()
+			# print('flag = ',flag)
