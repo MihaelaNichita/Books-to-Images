@@ -10,7 +10,6 @@ import requests
 from lxml import html
 
 translator = Translator()
-print("Start")
 content = []
 par_no = 0
 book_opened = False
@@ -57,7 +56,7 @@ def shiftLeftButtons(list_buttons, index):
         b.place(x=newX, y=newY)
 
 
-def deleteButton(event):
+def deleteButtonWhenClicked(event):
     global items_to_destroy
     removeButtons(items_to_destroy)
     caller = event.widget
@@ -98,15 +97,15 @@ def createChosenList(caller):
         messagebox.showwarning("Warning","Only 9 words allowed!")
         return
 
-    if len(caller['text'])<2 and caller['text'] not in range(10):
-        return
+    # if len(caller['text'])<2 and caller['text'] not in range(10):
+    #     return
 
     if caller['text'] in [b['text'] for b in list_buttons_chosen]:
         showMessage('Word already in the list',x=500,y=32)
         return
 
     new_button = Button(window, text=caller['text'], borderwidth=1, relief='solid')
-    new_button.bind("<Button-3>", deleteButton)
+    new_button.bind("<Button-3>", deleteButtonWhenClicked)
     new_button.bind("<Button-1>", linkWords)
 
     if len(list_buttons_chosen) == 0:
@@ -127,6 +126,8 @@ def itsaKeyWord(event):
 def justaWord(event):
     global list_in_words
     caller = event.widget
+    if caller['text'] in [',','.','!','?']:
+        return
     caller.configure(bg='lightpink', borderwidth=2)
     createChosenList(caller)
 
@@ -149,28 +150,42 @@ def translate(event):
 
 
 def insert_text(par):
-    global parFont, content_frame
-    lastx, lasty = 0, 0
-    #tok_text = nltk.word_tokenize(par)
-    tok_text = par.split(' ')
+    try:
+        global parFont, content_frame
+        lastx, lasty = 0, 0
+        #tok_text = nltk.word_tokenize(par)
+        par = re.sub(r"([.!?,:])", r" \1 ", par)
+        tok_text = []
+        for w in par.split(' '):
+            if w not in ['',' ','\n']:
+                tok_text.append(w)
+        
+        tok_text1 = []
+        for w in tok_text:
+            w.strip()
+            if w != '':
+                tok_text1.append(w)
 
-    for w in tok_text:
-        if lastx + len(w) * 10 > 550:
-            lastx, lasty = 0, lasty + 30
+        for w in tok_text1:
+            if lastx + len(w) * 10 > 550:
+                lastx, lasty = 0, lasty + 30
 
-        new_button = Button(content_frame, text=w, borderwidth=0, fg='#0F1626',font=parFont)
-        new_button.place(x=lastx, y=lasty, height=25)
-        list_buttons_content.append(new_button)
-        new_button.bind("<Button-1>", justaWord)
-        new_button.bind("<Button-3>", translate)
+            new_button = Button(content_frame, text=w, borderwidth=0, fg='#0F1626',font=parFont)
+            new_button.place(x=lastx, y=lasty, height=25)
+            list_buttons_content.append(new_button)
+            new_button.bind("<Button-1>", justaWord)
+            new_button.bind("<Button-3>", translate)
 
-        if w in filtered_par:
-            new_button.bind("<Button-1>", itsaKeyWord)
-            new_button.configure(bg='#bdbdbd')
+            if w in filtered_par:
+                new_button.bind("<Button-1>", itsaKeyWord)
+                new_button.configure(bg='#bdbdbd')
 
-        content_frame.update_idletasks()
-        lastx += new_button.winfo_width()
-        if w in ".:!?,": lastx += 10
+            content_frame.update_idletasks()
+            lastx += new_button.winfo_width()
+            if w in ".:!?,": lastx += 10
+    except:
+        catchError("Something went wrong when trying to insert text! \nPlease contact Mihaela Nichita.")
+        return
 
 
 def appendParToContent(paragraphs):
@@ -219,6 +234,37 @@ def getParFromWebPage():
         return
 
 
+def combineParagraphs():
+    global content
+    new_content = []
+    carry = ''
+    for p in content:
+        if carry != '':
+            print('p=',p)
+            p=carry+p
+            print('p=',p)
+            carry = ''
+
+        tok_par = p.split(' ')
+        print('len(tok_par)=',len(tok_par))
+
+        if len(tok_par)<30:
+            print('short paragraph')
+            carry = p
+        if len(tok_par)>100:
+            print('long paragraph')
+            print('tok_par[100] = ', tok_par[100])
+            i = p.find(tok_par[90],450)
+            currentPar = p[:i]
+            new_content.append(currentPar)
+            carry = p[i:]
+
+        if len(tok_par)>30 and len(tok_par)<100:
+            new_content.append(p)
+
+    content = new_content
+
+
 def open_book(event):
     global content, book_opened, list_in_words, list_buttons_content, window
     book_opened = True
@@ -239,6 +285,7 @@ def open_book(event):
     else:
         getParFromWebPage()
 
+    combineParagraphs()
     getFilteredPar(content[0])
     insert_text(content[par_no])
     list_in_words = filtered_par
@@ -299,27 +346,32 @@ def next_par(event):
 
 # Get filtered_par which won't contain stop words -> no more POS tagging
 def getFilteredPar(par):
-    try:
+    # try:
         # Remove Punctuation
         par = re.sub(r'[^\w\s]', ' ', par)
-        par = re.sub(r"([.!?,:])", r" \1", par)
         # par = re.sub(r" \'\w", r"\'\w", par) # for not separating "don" from "\'t"
         par = par.lower() 
+
         ## Word tokenization
-        tok_text = par.split(' ')
+        tok_text = []
+        for w in par.split(' '):
+            if w not in [' ','']:
+                tok_text.append(w)
+
         for w in tok_text:
             w.strip()
 
         # Removing Stopwords
         from nltk.corpus import stopwords
         stop_words = set(stopwords.words("english"))
+        
         global filtered_par
         for w in tok_text:
             if w not in stop_words and w not in filtered_par:
                 filtered_par.append(w)
-    except:
-        catchError("Something went wrong when trying to identify the parts of speech! \nPlease contact Mihaela Nichita.")
-        return
+    # except:
+    #     catchError("Something went wrong when trying to identify the parts of speech! \nPlease contact Mihaela Nichita.")
+    #     return
 
 
 def createButtons(list, xi, yi, col):
@@ -416,11 +468,12 @@ def resetColors():
 
 def reset(event):
     try:
-        global list_buttons_chosen
+        global list_buttons_chosen, button_link_w
         removeButtons(items_to_destroy)
         list_buttons_chosen = removeButtons(list_buttons_chosen)
         list_in_words = filtered_par
         resetColors()
+        button_link_w.configure(bg='#D3D3D3', fg='black',text = 'Link Words')
     except:
         catchError( "Something went wrong when resetting! \nPlease contact Mihaela Nichita.")
         return
@@ -560,8 +613,6 @@ def openWebSite(event):
 
 
 global e
-
-
 def openArticlesList():
     if book_opened is True:
         catchError( "Please EXIT first, then open the App again!")
@@ -651,12 +702,13 @@ def changeFont(event):
 click1 = False
 toBeLinked = []
 def linkWords(event):
+    global button_link_w
     if button_link_w['bg'] != 'black':
         return
 
     global list_buttons_chosen,toBeLinked
-    if len(toBeLinked) == 3:
-        messagebox.showwarning("Warning",'Not allowed to link more than 3 words!')
+    if len(toBeLinked) == 2:
+        messagebox.showwarning("Warning",'Not allowed to link more than 2 words at a time!')
     
     caller = event.widget
     # link 2 or 3 words
@@ -674,17 +726,17 @@ def changeColor(event):
         if len(toBeLinked)<2:
             messagebox.showwarning("Warning",'No words to link.')
 
-        for i in toBeLinked[1:]:
-            list_buttons_chosen[toBeLinked[0]]['text'] += '_' + list_buttons_chosen[i]['text']
-            deleteButton(list_buttons_chosen[i])
-        
+        if len(toBeLinked)==2:
+            list_buttons_chosen[toBeLinked[0]]['text'] += '_' + list_buttons_chosen[toBeLinked[1]]['text']
+            deleteButton(list_buttons_chosen[toBeLinked[1]])
+    
         print(list_buttons_chosen)
         toBeLinked = []
         button_link_w.configure(bg='#D3D3D3', fg='black',text = 'Link Words')
     
 
 def populateWindow():
-    global window
+    global window, b_par_no, button_link_w, b_font
     menubar = Menu(window)
 
     # create a pulldown menu, and add it to the menu bar
