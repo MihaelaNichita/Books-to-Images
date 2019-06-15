@@ -192,7 +192,8 @@ def appendParToContent(paragraphs):
     global content
     for p in paragraphs:
         if p.text is not '' and ' ' in p.text:
-            content.append(p.text)
+            par = re.sub(r'YOU ARE READING', ' ', p.text)
+            content.append(par)
 
 
 def getParFromWebPage():
@@ -239,28 +240,41 @@ def combineParagraphs():
     new_content = []
     carry = ''
     for p in content:
+        # print('\n\np = ',p)
         if carry != '':
-            print('p=',p)
-            p=carry+p
-            print('p=',p)
+            p=carry+' '+p
             carry = ''
+        # print('\n\np = ',p)
 
         tok_par = p.split(' ')
-        print('len(tok_par)=',len(tok_par))
-
+        # print('len(tok_par) = ',len(tok_par))
         if len(tok_par)<30:
-            print('short paragraph')
+            # print('short paragraph')
             carry = p
         if len(tok_par)>100:
-            print('long paragraph')
-            print('tok_par[100] = ', tok_par[100])
-            i = p.find(tok_par[90],450)
+            # print('long paragraph')
+            # print('tok_par[100] = ',tok_par[100])
+            i = p.find(tok_par[100],450)
             currentPar = p[:i]
             new_content.append(currentPar)
             carry = p[i:]
 
         if len(tok_par)>30 and len(tok_par)<100:
             new_content.append(p)
+
+    while carry != '':
+        # print('carry left: ',carry)
+        tok_par = carry.split(' ')
+        
+        if len(tok_par)>100:
+            # print('tok_par[100] = ',tok_par[100])
+            i = carry.find(tok_par[100],450)
+            currentPar = carry[:i]
+            new_content.append(currentPar)
+            carry = carry[i:]
+        else:
+            new_content.append(carry)
+            break
 
     content = new_content
 
@@ -468,7 +482,13 @@ def resetColors():
 
 def reset(event):
     try:
-        global list_buttons_chosen, button_link_w
+        global list_buttons_chosen, button_link_w,par_no,e2,b_par_no
+        if event.widget['text'] == 'OK':
+            if int(e2.get())>0 and int(e2.get())<=len(content):
+                par_no = int(e2.get())-1
+            else:
+                catchError('The number is not within the specified range!')
+                return
         removeButtons(items_to_destroy)
         list_buttons_chosen = removeButtons(list_buttons_chosen)
         list_in_words = filtered_par
@@ -714,8 +734,6 @@ def linkWords(event):
     # link 2 or 3 words
     toBeLinked.append(list_buttons_chosen.index(caller))
     caller['bg'] = 'lightpink'
-    print('toBeLinked = ', toBeLinked)
-
 
 
 def changeColor(event):
@@ -730,10 +748,39 @@ def changeColor(event):
             list_buttons_chosen[toBeLinked[0]]['text'] += '_' + list_buttons_chosen[toBeLinked[1]]['text']
             deleteButton(list_buttons_chosen[toBeLinked[1]])
     
-        print(list_buttons_chosen)
         toBeLinked = []
         button_link_w.configure(bg='#D3D3D3', fg='black',text = 'Link Words')
-    
+  
+global e2
+def goToParWindow(event):
+    global b_par_no, window,par_no,e2
+
+    if book_opened == False:
+        catchError( "Please open a book first!")
+        return
+    try:
+        go_to = Toplevel(window)
+        go_to.title('Articles List')
+        go_to.geometry("300x100")
+
+        l = Label(go_to, text='Link:')
+        l.place(x=30, y=30)
+        l.configure(bg='black', fg='white')
+
+        m_info = Message(go_to,text='Enter a number between 1 and '+str(len(content)),width=250)
+        m_info.config(bg='lightgreen', font=('times', 9))
+        m_info.place(x=30, y=5)
+
+        e2 = Entry(go_to, width=10)
+        e2.place(x=65, y=30)
+
+        b = Button(go_to, text='OK', borderwidth=2, relief=GROOVE, command=go_to.destroy)
+        b.place(x=130, y=30)
+        b.bind('<Button-1>', reset)
+    except:
+        catchError("Something went wrong when trying to go to the desired paragraph! \nPlease contact Mihaela Nichita.")
+        return 
+
 
 def populateWindow():
     global window, b_par_no, button_link_w, b_font
@@ -751,10 +798,24 @@ def populateWindow():
 
     window.config(menu=menubar)
 
-    m_info = Message(window, text='In order to change the book/article, go Open -> Exit. Then start the app again.',
+    m_info1 = Message(window, text='In order to change the book/article, go Open -> Exit. Then start the app again.',
                      width=90)
-    m_info.config(bg='lightgreen', font=('times', 9))
-    m_info.place(x=25, y=60)
+    m_info1.config(bg='lightgreen', font=('times', 9))
+    m_info1.place(x=25, y=60)
+
+    m_info2 = Message(window, text='You can always skip paragraphs.',
+                     width=90)
+    m_info2.config(bg='lightpink', font=('times', 9))
+    m_info2.place(x=25, y=150)
+
+    m_info3 = Message(window, text="Do they trigger Images in your Mind's Eye?",width=300)
+    m_info3.config(font=('verdana', 10))
+    m_info3.place(x=610, y=under_frame_y-30)
+
+    m_update = Message(window, text='UPDATEs: \n1. Now you can link words if they look better together. Press "Link Words", select 2 words and press OK.\n'+
+        '\n2. For reading a specific paragraph, Press the button which indicates the paragraph number.',width=200)
+    m_update.config(bg='lightblue', font=('calibre', 10))
+    m_update.place(x=185, y=under_frame_y)
 
     # PARAGRAPH related: #
     label_paragraph = Label(window, text="Paragraph:")
@@ -772,6 +833,7 @@ def populateWindow():
     b_par_no = Button(window, text='1', borderwidth=2, relief='groove')
     b_par_no.config(font=('times', 9, 'italic'))
     b_par_no.place(x=267, y=32, width=35, height=22)
+    b_par_no.bind("<Button-1>",goToParWindow)
 
     # FONT related #
     label_font = Label(window, text="Font:")
@@ -799,8 +861,21 @@ def populateWindow():
     button_send.place(x=505, y=under_frame_y + 90, width=100, height=25)
     button_send.bind("<Button-1>", sendComb)
 
-   
-
+    # label_nouns2 = Label(window, text="Nouns:")
+    # label_nouns2.place(x=185, y=under_frame_y, width=95, height=25)
+    # label_nouns2.configure(bg='black', fg='white')
+    # label_actions2 = Label(window, text="Actions:")
+    # label_actions2.place(x=285, y=under_frame_y, width=95, height=25)
+    # label_actions2.configure(bg='black', fg='white')      
+    # label_adjectives2 = Label(window, text="Adjectives:")
+    # label_adjectives2.place(x=385, y=under_frame_y, width=95, height=25)
+    # label_adjectives2.configure(bg='black', fg='white')
+    # button_hint = Button(window, text="Hint", borderwidth=2, relief='groove')
+    # button_hint.place(x=90, y=under_frame_y, width=40, height=25)
+    # button_hint.bind("<Button-1>", genComb)
+    # label_check = Label(window, text='No:')
+    # label_check.place(x=140, y=under_frame_y, width=40, height=25)
+    # label_check.configure(bg='black', fg='white')
 
 window = Tk()
 window.geometry("1100x700")
