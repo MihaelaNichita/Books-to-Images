@@ -599,7 +599,7 @@ def getInfo():
 
 def myfunction(event):
 	global canvas
-	canvas.configure(scrollregion=canvas.bbox("all"),width=400,height=400)
+	canvas.configure(scrollregion=canvas.bbox("all"),width=300,height=400)
 
 
 def data(frame):
@@ -648,10 +648,39 @@ def openBooksList():
 		frame.bind("<Configure>",myfunction)
 		data(frame)
 
+		m = Message(books_list,text="If you've added new books to the library ->",width=250 )
+		m.place(x=20,y=480)
+		b = Button(books_list, text='UPDATE', font=('times', 10))
+		b.place(x=260,y=480)
+		b.configure(bg='lightpink')
+		b.bind("<Button-1>",updateLibrary)
+
 	except:
 	    catchError("Something went wrong when trying to open the list of books! \nPlease contact Mihaela Nichita.")
 	    return
 
+import getParagraphs
+def updateLibrary(event):
+	import glob
+	import os
+	filename = ''
+	content = ''
+	files=glob.glob("books/*.txt")
+	print(files)
+	for file in files:
+		f = open(file, "r",encoding='UTF-8') 
+
+		content = f.read()
+		filename = file[file.index('\\')+1:file.index('.')]
+
+		exists = os.path.isfile("paragraphs/"+ filename +"-paragraphs.txt")
+		if exists:
+			print(filename +"-paragraphs.txt already exists")
+		else:
+			print(filename)
+			getParagraphs.extract_paragraphs(content,filename)
+
+		f.close()
 
 def openWebSite(event):
 	try:
