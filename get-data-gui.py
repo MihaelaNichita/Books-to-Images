@@ -8,6 +8,9 @@ from googletrans import Translator
 from bs4 import BeautifulSoup
 import requests
 from lxml import html
+import glob
+import getParagraphs
+
 
 translator = Translator()
 content = []
@@ -26,21 +29,56 @@ parFont = ('times', 12)
 fonts = [9,10,11,12,13,14]
 items_to_destroy = []
 filtered_par = []
+books=[]
 
 
-books = [('the-little-prince', 'The Little Prince', 'Antoine de Saint Exupery'),
-		 ('to-kill-a-mocking-bird', 'To Kill a Mocking Bird', 'Harper Lee'),
-		 ('breakfast-at-tiffany', "Breakfast at Tiffany's", 'Truman Capote'),
-		 ('intelligent-agents', "Intelligent Agents", 'Russel & Norvig'),
-		 ('solving-problems-by-searching', "Solving Problems by Searching", 'Russel & Norvig'),
-		 ('sapiens','Sapiens','Yuval Noah Harari'),
-		 ('bla', 'bla', 'bla'),
-		 ('greg', 'bla', 'bla'),
-		 ('blvfdv', 'bla', 'bla'),
-		 ('bvfjd', 'bla', 'bla'),
-		 ('blvfdfvd', 'bla', 'bla'),
-		 ('soifj', 'bla', 'bla')
-		 ]
+def updateListOfBooks():
+	global books
+	try:
+		files=glob.glob("paragraphs/*.txt")
+
+		for file in files:
+			filename = file[file.index('\\')+1:file.index('.')]
+			i = filename.find('paragraphs')-1
+			filename = filename[:i]
+
+			f = open("Data\\books.txt","r+")
+			content = f.readlines()
+
+			list = []
+			for line in content:
+				line = re.sub(r"\n",r'',line)
+				if line != '':
+					if ',' in line:
+						list.append(line[:line.index(',')])
+
+			if filename not in list:
+				# print(filename,' not in content')
+				title = re.sub(r"-", r" ", filename)
+				f.write(filename+','+title+'\tAuthor\n')
+	except:
+		catchError("Something went wrong when trying to update the list of books! \nPlease contact Mihaela Nichita.")
+		return
+
+
+def loadBooks():
+	global books
+	try:
+		updateListOfBooks()
+		f = open("Data\\books.txt","r")
+		content = f.readlines()
+		for line in content:
+			line = re.sub(r"\n",r'',line)
+			if line != '':
+				book = (line[:line.index(',')],line[line.index(',')+1:line.index('\t')],line[line.index('\t')+1:])
+				# print('book = ', book)
+				books.append(book)
+	except:
+		catchError("Something went wrong when trying to load books! \nPlease contact Mihaela Nichita.")
+		return
+
+loadBooks()
+
 
 
 def catchError(text):
@@ -659,28 +697,36 @@ def openBooksList():
 	    catchError("Something went wrong when trying to open the list of books! \nPlease contact Mihaela Nichita.")
 	    return
 
-import getParagraphs
+
+def getParagraphsFromBooks():
+	try:
+		filename = ''
+		content = ''
+		files=glob.glob("books/*.txt")
+		# print(files)
+		for file in files:
+			f = open(file, "r",encoding='UTF-8') 
+
+			content = f.read()
+			filename = file[file.index('\\')+1:file.index('.')]
+
+			exists = os.path.isfile("paragraphs/"+ filename +"-paragraphs.txt")
+			if exists:
+				print(filename +"-paragraphs.txt already exists")
+			else:
+				# print(filename)
+				getParagraphs.extract_paragraphs(content,filename)
+
+			f.close()	
+	except:
+	    catchError("Something went wrong when trying to get paragraphs from books! \nPlease contact Mihaela Nichita.")
+	    return
+
+
 def updateLibrary(event):
-	import glob
-	import os
-	filename = ''
-	content = ''
-	files=glob.glob("books/*.txt")
-	print(files)
-	for file in files:
-		f = open(file, "r",encoding='UTF-8') 
+	getParagraphsFromBooks()
+	loadBooks()
 
-		content = f.read()
-		filename = file[file.index('\\')+1:file.index('.')]
-
-		exists = os.path.isfile("paragraphs/"+ filename +"-paragraphs.txt")
-		if exists:
-			print(filename +"-paragraphs.txt already exists")
-		else:
-			print(filename)
-			getParagraphs.extract_paragraphs(content,filename)
-
-		f.close()
 
 def openWebSite(event):
 	try:
