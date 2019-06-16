@@ -77,9 +77,6 @@ def loadBooks():
 		catchError("Something went wrong when trying to load books! \nPlease contact Mihaela Nichita.")
 		return
 
-loadBooks()
-
-
 
 def catchError(text):
 	messagebox.showwarning("Warning",text)
@@ -403,7 +400,7 @@ def next_par(event):
 
 # Get filtered_par which won't contain stop words -> no more POS tagging
 def getFilteredPar(par):
-	# try:
+	try:
 		# Remove Punctuation
 		par = re.sub(r'[^\w\s]', ' ', par)
 		# par = re.sub(r" \'\w", r"\'\w", par) # for not separating "don" from "\'t"
@@ -426,9 +423,9 @@ def getFilteredPar(par):
 		for w in tok_text:
 			if w not in stop_words and w not in filtered_par:
 				filtered_par.append(w)
-	# except:
-	#     catchError("Something went wrong when trying to identify the parts of speech! \nPlease contact Mihaela Nichita.")
-	#     return
+	except:
+	    catchError("Something went wrong when trying to filter the paragraph! \nPlease contact Mihaela Nichita.")
+	    return
 
 
 def createButtons(list, xi, yi, col):
@@ -637,7 +634,7 @@ def getInfo():
 
 def myfunction(event):
 	global canvas
-	canvas.configure(scrollregion=canvas.bbox("all"),width=300,height=400)
+	canvas.configure(scrollregion=canvas.bbox("all"),width=380,height=400)
 
 
 def data(frame):
@@ -686,12 +683,12 @@ def openBooksList():
 		frame.bind("<Configure>",myfunction)
 		data(frame)
 
-		m = Message(books_list,text="If you've added new books to the library ->",width=250 )
-		m.place(x=20,y=480)
-		b = Button(books_list, text='UPDATE', font=('times', 10))
-		b.place(x=260,y=480)
-		b.configure(bg='lightpink')
-		b.bind("<Button-1>",updateLibrary)
+		# m = Message(books_list,text="If you've added new books to the library ->",width=250 )
+		# m.place(x=20,y=480)
+		# b = Button(books_list, text='UPDATE', font=('times', 10))
+		# b.place(x=260,y=480)
+		# b.configure(bg='lightpink')
+		# b.bind("<Button-1>",updateLibrary)
 
 	except:
 	    catchError("Something went wrong when trying to open the list of books! \nPlease contact Mihaela Nichita.")
@@ -700,6 +697,7 @@ def openBooksList():
 
 def getParagraphsFromBooks():
 	try:
+		global books_list
 		filename = ''
 		content = ''
 		files=glob.glob("books/*.txt")
@@ -716,6 +714,7 @@ def getParagraphsFromBooks():
 			else:
 				# print(filename)
 				getParagraphs.extract_paragraphs(content,filename)
+				print('Added ',filename)
 
 			f.close()	
 	except:
@@ -723,7 +722,7 @@ def getParagraphsFromBooks():
 	    return
 
 
-def updateLibrary(event):
+def updateLibrary():
 	getParagraphsFromBooks()
 	loadBooks()
 
@@ -983,6 +982,8 @@ def populateWindow():
 	# label_check.place(x=140, y=under_frame_y, width=40, height=25)
 	# label_check.configure(bg='black', fg='white')
 
+
+updateLibrary()
 window = Tk()
 window.geometry("1100x700")
 window.title('Reading Assistant')
