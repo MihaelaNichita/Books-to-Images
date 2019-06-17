@@ -21,7 +21,6 @@ list_buttons_comb = []
 list_buttons_check = []
 list_buttons_content = []
 list_buttons_chosen = []
-list_in_words = []
 all_comb = []
 under_frame_y = 400
 page_link = ''
@@ -131,7 +130,7 @@ def showMessage(text,x,y):
 	items_to_destroy.append(msg)
 
 def createChosenList(caller):
-	global list_buttons_chosen,list_in_words, window
+	global list_buttons_chosen,window
 
 	if len(list_buttons_chosen) == 9:
 		messagebox.showwarning("Warning","Only 9 words allowed!")
@@ -154,7 +153,6 @@ def createChosenList(caller):
 		new_button.place(x=610 + (len(list_buttons_chosen) % 4) * 100,
 						 y=under_frame_y + int(len(list_buttons_chosen) / 4) * 30, height=25, width=95)
 	list_buttons_chosen.append(new_button)
-	list_in_words.append(caller['text'])
 
 
 def itsaKeyWord(event):
@@ -164,7 +162,6 @@ def itsaKeyWord(event):
 
 
 def justaWord(event):
-	global list_in_words
 	caller = event.widget
 	if caller['text'] in [',','.','!','?']:
 		return
@@ -188,10 +185,10 @@ def translate(event):
 		catchError("Something went wrong when trying to translate this word! \nCheck your connection to the internet.")
 		return
 
-
+tok_text1 = []
 def insert_text(par):
 	try:
-		global parFont, content_frame
+		global parFont, content_frame,tok_text1
 		lastx, lasty = 0, 0
 		#tok_text = nltk.word_tokenize(par)
 		par = re.sub(r"([.!?,:])", r" \1 ", par)
@@ -320,7 +317,7 @@ def combineParagraphs():
 
 
 def open_book(event):
-	global content, book_opened, list_in_words, list_buttons_content, window
+	global content, book_opened,list_buttons_content, window
 	book_opened = True
 
 	list_buttons_content = removeButtons(list_buttons_content)
@@ -342,7 +339,6 @@ def open_book(event):
 	combineParagraphs()
 	getFilteredPar(content[0])
 	insert_text(content[par_no])
-	list_in_words = filtered_par
 
 
 def removeButtons(list_buttons):
@@ -359,7 +355,7 @@ def change_par():
 
 	try:
 
-		global par_no, content, all_comb, list_in_words, list_buttons_chosen, items_to_destroy
+		global par_no, content, all_comb,list_buttons_chosen, items_to_destroy
 		global list_buttons_check, list_buttons_comb, list_buttons_content, b_par_no
 		all_comb = []
 
@@ -377,7 +373,6 @@ def change_par():
 
 		getFilteredPar(content[par_no])
 		insert_text(content[par_no])
-		list_in_words = filtered_par
 	except:
 		catchError("Something went wrong when trying to change the paragraph! \nPlease contact Mihaela Nichita.")
 		return
@@ -531,7 +526,6 @@ def reset(event):
 				return
 		removeButtons(items_to_destroy)
 		list_buttons_chosen = removeButtons(list_buttons_chosen)
-		list_in_words = filtered_par
 		resetColors()
 		button_link_w.configure(bg='#D3D3D3', fg='black',text = 'Link Words')
 	except:
@@ -540,15 +534,33 @@ def reset(event):
 
 
 def sendComb(event):
-	global list_in_words, list_buttons_chosen
+	global list_buttons_chosen,content,par_no
 	list_out_words = []
+	list_in_words = []
+	pure_out_words = []
 
 	try:
 		if len(list_buttons_chosen)<2:
 			messagebox.showwarning("Warning",'Minimum 2 words needed')
 			return
+
 		for b in list_buttons_chosen:
 			list_out_words.append(b['text'])
+			if '_' in b['text']:
+				for w in b['text'].split('_'):
+					pure_out_words.append(w)
+					continue
+			pure_out_words.append(b['text'].lower)
+
+		
+		#print('tok_par = ',tok_text1)
+		for w in tok_text1:
+			if w in filtered_par or w in pure_out_words:
+				list_in_words.append(w)
+		
+		# print('filtered_par = ',filtered_par)
+		# print('list_in_words = ',list_in_words)
+		# print('list_out_words = ',list_out_words)
 
 		f = open("Data/Data.txt", 'a')
 		for w in list_in_words:
@@ -710,11 +722,12 @@ def getParagraphsFromBooks():
 
 			exists = os.path.isfile("paragraphs/"+ filename +"-paragraphs.txt")
 			if exists:
-				print(filename +"-paragraphs.txt already exists")
+				continue
+				# print(filename +"-paragraphs.txt already exists")
 			else:
 				# print(filename)
 				getParagraphs.extract_paragraphs(content,filename)
-				print('Added ',filename)
+				# print('Added ',filename)
 
 			f.close()	
 	except:
