@@ -1,0 +1,18 @@
+the-little-prince,The Little Prince	Antoine de Saint Exupery
+to-kill-a-mocking-bird,To Kill a Mocking Bird	Harper Lee
+breakfast-at-tiffany,Breakfast at Tiffany's	Truman Capote
+intelligent-agents,Intelligent Agents	Russel & Norvig
+solving-problems-by-searching,Solving Problems by Searching	Russel & Norvig
+Predictably-Irrational,Predictably Irrational	Dan Ariely
+sapiens,Sapiens	Yuval Noah Harari
+Creative-Confidence,Creative Confidence	Tom Kelley
+One-Hundred-Years-of-Solitude,One Hundred Years of Solitude	Gabriel Garcia Marquez
+Animal-Farm,Animal Farm	George Orwell
+Art-&-Fear,Art & Fear	David Bayles & Ted Orland
+How-To-Have-Kick-Ass-Ideas,How To Have Kick Ass Ideas	Chris Baréz-Brown
+Save-the-Cat!,Save the Cat!	Blake Snyder
+The-Catcher-in-the-Rye,The Catcher in the Rye	Author
+The-Monk-Who-Sold-His-Ferrari,The Monk Who Sold His Ferrari	Author
+1984,1984	Author
+Perfume-The-Story-Of-a-Murderer,Perfume The Story Of a Murderer	Author
+Name-of-the-Rose,Name of the Rose	Author
