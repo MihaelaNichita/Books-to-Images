@@ -5,7 +5,7 @@ def writeParagraph(par,nr,filename):
 	# Write one paragraph a line (enter between paragraphs)
 	f = open("paragraphs/"+ filename +"-paragraphs.txt",'a')
 	try:
-		f.write(nr + ". " + par + '\n')
+		f.write(par + '\n')
 	except UnicodeEncodeError:
 		pass
 
