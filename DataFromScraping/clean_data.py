@@ -56,8 +56,12 @@ def filterContent():
 
 
 def filterLine(line):
-	if line == None or '\t' not in line:
+	if line == None or '\t' not in line or 'sex' in line:
 		return ''
+
+	line = re.sub(r'&#39;',"'",line)
+	line = re.sub(r'[^\w\s]', ' ', line).lower()
+	line = re.sub(r'  ', ' ', line)
 
 	pair = line.split('\t')
 
@@ -79,7 +83,7 @@ def filterLine(line):
 		pair[0] = pair[0][pair[0].index(text):]
 
 	if pair[0][0] == ' ':
-		print('PROBLEM')
+		# print('PROBLEM')
 		pair[0] = pair[0][1:]
 
 	line = pair[0] + '\t' + pair[1]
@@ -118,7 +122,6 @@ def getAllFilesContent():
 		getContent(file)
 		
 		for l in init_content:
-
 			l = filterLine(l)
 			if isOK(l):
 				all_content.append(l)
@@ -156,4 +159,5 @@ def removeAll_():
 
 getAllFilesContent()
 print(len(all_content))
+writeNewContent(all_content)
 
