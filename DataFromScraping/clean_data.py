@@ -25,7 +25,7 @@ def areIdentical(l1,l2):
 
 def filterContent():
 	global init_content, new_content
-
+	init_content = all_content
 	new_content1 = []
 	for l in init_content:
 		if '\t' not in l:
@@ -33,20 +33,67 @@ def filterContent():
 			continue
 		new_content1.append(l)
 
-	prev=""
+	# prev=""
+	# for l in new_content1:
+	# 	if prev != "" and areIdentical(prev,l[:len(prev)]):
+	# 		new_content.append(l[len(prev):])
+	# 		prev = l[:l.index('\t')]
+	# 		continue
+	# 	if prev == "":
+	# 		prev = l[:l.index('\t')]
+	# 	else:
+	# 		prev = ""
+	# 	new_content.append(l)
+
 	for l in new_content1:
 		if "sex" in l:
 			print('Removed line with sex')
 			continue
-		if prev != "" and areIdentical(prev,l[:len(prev)]):
-			new_content.append(l[len(prev):])
-			prev = l[:l.index('\t')]
+		if l == '' or '\n\n' in l or l == '\t\n' or l=='\n\t':
+			print('not a good line')
 			continue
-		if prev == "":
-			prev = l[:l.index('\t')]
-		else:
-			prev = ""
 		new_content.append(l)
+
+
+def filterLine(line):
+	if line == None or '\t' not in line:
+		return ''
+
+	pair = line.split('\t')
+
+	if len(pair)<2:
+		return ''
+
+	if len(pair[0])<2 or len(pair[0]) == len(pair[1]) or pair[1]=='\n':
+		return ''
+
+	if pair[0][0] == ' ':
+		pair[0] = pair[0][1:]
+
+	if pair[0][-1] == ' ':
+		# print('TS')
+		pair[0] = pair[0][:-1]
+
+	text = "Europe East Asia years ago"
+	if text in pair[0]:
+		pair[0] = pair[0][pair[0].index(text):]
+
+	if pair[0][0] == ' ':
+		print('PROBLEM')
+		pair[0] = pair[0][1:]
+
+	line = pair[0] + '\t' + pair[1]
+	print('1. ',pair[0])
+	print('2. ',pair[1])
+
+
+	return line
+
+
+def isOK(line):
+	if line == '':
+		return False
+	return True
 
 
 def writeNewContent(content):
@@ -64,14 +111,17 @@ def checkText():
 
 def getAllFilesContent():
 	global all_content,init_content
-	files=glob.glob("DataCollection/*.txt")
+	files=glob.glob("*.txt")
 
 	for file in files:
 		print(file)
 		getContent(file)
-		print(init_content[0])
+		
 		for l in init_content:
-			all_content.append(l)
+
+			l = filterLine(l)
+			if isOK(l):
+				all_content.append(l)
 		init_content = []
 
 
@@ -104,5 +154,6 @@ def removeAll_():
 
 
 
-getContent("keyword_data.txt")
-print(len(init_content))
+getAllFilesContent()
+print(len(all_content))
+
