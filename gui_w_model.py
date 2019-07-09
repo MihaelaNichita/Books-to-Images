@@ -674,7 +674,7 @@ def insert_text(par):
 			new_button.bind("<Button-1>", justaWord)
 			new_button.bind("<Button-3>", translate)
 
-			if w in filtered_par:
+			if w.lower() in filtered_par:
 				new_button.bind("<Button-1>", itsaKeyWord)
 				new_button.configure(bg='#bdbdbd')
 
@@ -818,8 +818,8 @@ def change_par():
 
 	# try:
 
-	global par_no, content, all_comb,list_buttons_chosen, items_to_destroy,image_files
-	global list_buttons_check, list_buttons_comb, list_buttons_content, b_par_no
+	global par_no, content, all_comb,list_buttons_chosen, items_to_destroy,image_files,msg_yes_no
+	global list_buttons_check, list_buttons_comb, list_buttons_content, b_par_no,msg_kw
 	all_comb = []
 
 	# Remove previous buttons
@@ -828,6 +828,8 @@ def change_par():
 	list_buttons_content = removeButtons(list_buttons_content)
 	list_buttons_chosen = removeButtons(list_buttons_chosen)
 	removeButtons(items_to_destroy)
+	msg_yes_no = removeButtons(msg_yes_no)
+	msg_kw = removeButtons(msg_kw)
 	image_files = []
 
 	nr = par_no
@@ -872,7 +874,7 @@ def getKeywords():
 		# print(output_words1)
 		if len(output_words1)>1:
 			for w in output_words1[:-1]:
-				if w != '' and w not in output_words:
+				if w not in ['',' ','/n'] and w not in output_words:
 					output_words.append(w)
 		filtered_par = filtered_par[10:]
 
@@ -881,14 +883,39 @@ def getKeywords():
 	
 	if len(output_words2)>1:
 		for w in output_words2[:-1]:
-			if w != '' and w not in output_words:
+			if w not in ['',' ','/n'] and w not in output_words:
 				output_words.append(w)
 	print(output_words)
 
-	msg_kw.config(text='\n'.join(output_words))
-
 	if output_words != []:
+		printKeyWords(output_words)
 		getImages(output_words)
+		checkGoodBad(output_words)
+
+
+msg_kw = []
+def printKeyWords(rnn_output):
+	global msg_kw
+	for w in rnn_output:
+		msg11 = Message(keywords_frame,text=w,width=250)
+		msg11.place(x=45,y=20+30*rnn_output.index(w))
+		msg11.config(font=('times',14),bg='#F2F2F2')
+		msg_kw.append(msg11)
+
+
+msg_yes_no = []
+def checkGoodBad(rnn_output):
+
+	for w in rnn_output:
+		msg11 = Message(keywords_frame)
+		msg11.place(x=8,y=20+30*rnn_output.index(w))
+		msg11.config(font=('times',14))
+		msg_yes_no.append(msg11)
+		if w in filtered_par:
+			msg11.config(fg='green',text='Yes')
+			continue
+		msg11.config(fg='red',text='No')
+		
 
 
 def addImageToSlideshow(n,path):
@@ -910,9 +937,7 @@ def createSlideShow():
 
 from google_images_download import google_images_download
 def getImages(words):
-	# if len(words) == 2:
-	# 	words[0] = ' '.join(words)
-	# 	words.remove(words[-1])
+
 	response = google_images_download.googleimagesdownload()
 	for w in words:
 		if os.path.exists("downloads/"+w) == False:
@@ -1540,6 +1565,15 @@ def populateWindow():
 	button_next_img.place(x=800, y=82, width=40, height=22)
 	button_next_img.bind("<Button-1>", show_slides)
 
+	# button_img_rnn = Button(window, text="Generated Keywords", borderwidth=2, relief='groove')
+	# button_img_rnn.place(x=800, y=82, width=40, height=22)
+	# button_img_rnn.bind("<Button-1>", show_slides)
+
+	# button_next_img = Button(window, text="Own Keywords", borderwidth=2, relief='groove')
+	# button_next_img.place(x=800, y=82, width=40, height=22)
+	# button_next_img.bind("<Button-1>", show_slides)
+
+
 	# button_collage = Button(window, text="collage", borderwidth=2, relief='groove')
 	# button_collage.place(x=860, y=82, width=40, height=22)
 	# button_collage.bind("<Button-1>", getCollage)
@@ -1599,8 +1633,22 @@ def show_slides(event):
 	global pictures
 	print(pictures)
 
+	i=0
+	first = True
+	print('msg_kw = ',msg_kw)
+	for w in msg_kw:
+		if w['bg'] == '#ADACAC':
+			first = False
+			print(w['text'])
+			i = msg_kw.index(w)
+			w.config(bg='#F2F2F2')
+
 	img_object, img_name = next(pictures)
-	picture_display.config(image=img_object)	
+	picture_display.config(image=img_object)
+
+	if not first:
+		i = (i+1)%len(msg_kw)
+	msg_kw[i].config(bg='#ADACAC')
 
 	# title(img_name)		
 
@@ -1638,9 +1686,7 @@ picture_display.place(x=0,y=0)
 
 
 
-msg_kw = Message(keywords_frame,width=290)
-msg_kw.config(font=('times', 12))
-msg_kw.place(x=35, y=20)
+
 
 populateWindow()
 window.mainloop()
