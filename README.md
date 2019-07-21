@@ -2,7 +2,7 @@
 ## Architecture
 This section describes the developed prototype of the application. Text, model predictions, images and other specific services relating the user-machine interaction are all merged into the “Learning Assistant” application depicted in Fig. 10. The flow of interactions between various components of the application is started by the user requesting a book or a certain article on a web page to read. This request follows the purple path illustrated in Fig 10. If the user inserts the address of the desired web page, the request is carried on to the component that is specialized in extracting web content, i.e. the crawlers, for subsequently filtering it and dividing the whole text into paragraphs consisting of less than 50 words each. 
  
-!Architecture /images/architecture.jpg?raw=true "Architecture"
+![Architecture] (/images/architecture.jpg?raw=true "Architecture")
 *Figure 10 - Illustration of the interaction between the user and the “Learning Assistant” application*
 
 By choosing a book from the existing list, since online content is not required, the app retrieves the book content from the local library, which already includes the existing books divided into paragraphs. Whenever the application is started, the first thing it does is checking whether there are any new books, not divided into paragraphs yet, and completes the task, if so. The thread illustrated with purple in the diagram finally reaches its goal of delivering the desired content, divided into paragraphs, to the graphical user interface, so the user can visualize it.
